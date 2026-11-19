@@ -1,9 +1,9 @@
 extends Node3D
 ## Todo lo visual: terreno, agua, vegetación, edificios, fauna, cielo, clima y efectos.
 
-const C := 20
-const R := 20
-const S := 6                 # subdivisiones por casilla del terreno
+const C := 30
+const R := 30
+const S := 5                 # subdivisiones por casilla del terreno
 const NV := C * S + 1
 const BAND := 0.3
 const GRASSY := ["grass","forest","flower","wet"]
@@ -148,7 +148,7 @@ func _make_env() -> void:
 	sun = DirectionalLight3D.new()
 	sun.shadow_enabled = true
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
-	sun.directional_shadow_max_distance = 70.0
+	sun.directional_shadow_max_distance = 95.0
 	sun.shadow_blur = 1.5
 	sun.shadow_bias = .04
 	sun.shadow_normal_bias = 1.2
@@ -180,7 +180,7 @@ func _make_nodes() -> void:
 	add_child(water_mm)
 	# pasto en trozos de 5x5 casillas
 	var bl := Geo.blade()
-	for k in 16:
+	for k in 36:
 		var mmi := MultiMeshInstance3D.new()
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -238,7 +238,7 @@ func _make_nodes() -> void:
 		mi.mesh = Geo.cloud(40 + k)
 		mi.material_override = cloud_mat
 		var a := TAU * k / 14 + randf() * .3
-		var d := randf_range(24, 44)
+		var d := randf_range(34, 60)
 		var s := randf_range(3.5, 7.0)
 		mi.scale = Vector3(s, s * randf_range(.8, 1.1), s)
 		mi.position = Vector3(cos(a) * d, randf_range(-8, -1.5), sin(a) * d)
@@ -252,15 +252,15 @@ func _make_nodes() -> void:
 		mi.material_override = cloud_mat
 		var s := 2.0 + randf() * 1.4
 		mi.scale = Vector3(s, s, s)
-		mi.position = Vector3(randf_range(-30, 30), 16 + randf() * 3, randf_range(-30, 30))
+		mi.position = Vector3(randf_range(-40, 40), 18 + randf() * 3, randf_range(-40, 40))
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		add_child(mi); clouds.append(mi)
 	# clima
 	rain_p = _weather(false); snow_p = _weather(true)
 	fireflies = CPUParticles3D.new()
-	fireflies.amount = 90; fireflies.lifetime = 6.0
+	fireflies.amount = 180; fireflies.lifetime = 6.0
 	fireflies.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	fireflies.emission_box_extents = Vector3(10, .6, 10)
+	fireflies.emission_box_extents = Vector3(15, .6, 15)
 	fireflies.position = Vector3(0, 1.2, 0)
 	fireflies.gravity = Vector3(0, .02, 0)
 	fireflies.direction = Vector3(0, 1, 0); fireflies.spread = 180; fireflies.initial_velocity_min = .03; fireflies.initial_velocity_max = .12
@@ -278,10 +278,10 @@ func _make_nodes() -> void:
 
 func _weather(is_snow: bool) -> CPUParticles3D:
 	var p := CPUParticles3D.new()
-	p.amount = 1600 if not is_snow else 1200
+	p.amount = 3000 if not is_snow else 2200
 	p.lifetime = 1.4 if not is_snow else 6.0
 	p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
-	p.emission_box_extents = Vector3(13, .5, 13)
+	p.emission_box_extents = Vector3(18, .5, 18)
 	p.position = Vector3(0, 9, 0)
 	p.direction = Vector3(.1, -1, 0); p.spread = 3 if not is_snow else 25
 	p.gravity = Vector3(0, -9.8, 0) if not is_snow else Vector3(0, -.6, 0)
@@ -308,7 +308,7 @@ func _island_mesh() -> ArrayMesh:
 	var pts := []
 	for k in n:
 		var a := TAU * k / n
-		var rr := 10.02 / maxf(absf(cos(a)), absf(sin(a)))
+		var rr := 15.02 / maxf(absf(cos(a)), absf(sin(a)))
 		pts.append(Vector3(cos(a) * rr, top, sin(a) * rr))
 	var rings := [[1.0, 0.0], [.86, -1.4], [.62, -3.0], [.38, -4.8], [.16, -6.6]]
 	var prev := pts
@@ -493,7 +493,7 @@ func _gen_objs(i: int) -> void:
 		var x := c.x + r.randf_range(-.5 + m, .5 - m); var z := c.z + r.randf_range(-.5 + m, .5 - m)
 		if occupied and Vector2(x - c.x, z - c.z).length() < .42: return
 		var y := height_at(x, z)
-		if t in ["wet", "mang"]: y = maxf(y, water_h(i) - .12)
+		if t in ["wet", "mang"]: y = maxf(y, water_h(i) - .04)
 		var sc := s * r.randf_range(.8, 1.2)
 		var bs := Basis(Vector3.UP, r.randf() * TAU).scaled(Vector3(sc, sc, sc))
 		o.append([v, Transform3D(bs, Vector3(x, y, z)), r.randf()])
@@ -560,7 +560,7 @@ func _build_veg() -> void:
 			if mm.use_colors: mm.set_instance_color(n, o[3])
 
 func _build_grass_chunk(ch: int) -> void:
-	var cx0 := (ch % 4) * 5; var cy0 := (ch / 4) * 5
+	var cx0 := (ch % 6) * 5; var cy0 := (ch / 6) * 5
 	var buf := PackedFloat32Array()
 	var cnt := 0
 	var reg: String = G.region_id
@@ -617,7 +617,7 @@ func rebuild_all() -> void:
 	_build_water()
 	for i in C * R: _gen_objs(i)
 	_build_veg()
-	for ch in 16: _build_grass_chunk(ch)
+	for ch in 36: _build_grass_chunk(ch)
 	for k in bnodes: bnodes[k].queue_free()
 	bnodes.clear()
 	for i in C * R:
@@ -631,7 +631,7 @@ func _on_tile(i: int, old: String) -> void:
 	if (t in D.SUNK) != (old in D.SUNK) or t == "mang" or old == "mang": height_dirty = true
 	if (t in D.WATERY) != (old in D.WATERY) or t in D.WATERY: water_dirty = true
 	if (t in GRASSY) and not (old in GRASSY): gborn[i] = G.now_s
-	grass_dirty[(i / C / 5) * 4 + (i % C) / 5] = true
+	grass_dirty[(i / C / 5) * 6 + (i % C) / 5] = true
 	_gen_objs(i)
 	veg_dirty = true
 
@@ -642,7 +642,7 @@ func _on_building(i: int, old: String) -> void:
 		n.queue_free()
 	if G.B[i] != "": _place_building(i, true)
 	_gen_objs(i); veg_dirty = true
-	grass_dirty[(i / C / 5) * 4 + (i % C) / 5] = true
+	grass_dirty[(i / C / 5) * 6 + (i % C) / 5] = true
 
 func _place_building(i: int, anim_in: bool) -> void:
 	var n: Node3D = factory.make(G.B[i], i)
@@ -661,7 +661,8 @@ func _sync_fauna() -> void:
 		ids[a.id] = true
 		if not anodes.has(a.id):
 			var n: Node3D = factory.animal(a.k)
-			n.scale = Vector3.ONE * 1.7
+			var big: float = 2.8 if a.k in ["frog", "butterfly", "bee", "lizard", "duck"] else (2.2 if a.k in ["rabbit", "hare", "beaver", "fox", "turtle", "parrot"] else 1.7)
+			n.scale = Vector3.ONE * big
 			anodes[a.id] = n
 			add_child(n)
 			factory.set_born(n, G.now_s)
@@ -760,7 +761,7 @@ func _process(dt: float) -> void:
 		_build_terrain()
 		for i in C * R: _gen_objs(i)
 		veg_dirty = true
-		for ch in 16: grass_dirty[ch] = true
+		for ch in 36: grass_dirty[ch] = true
 		for i in bnodes:
 			var p := tile_center(i); bnodes[i].position.y = height_at(p.x, p.z)
 	if water_dirty:
@@ -781,7 +782,7 @@ func _process(dt: float) -> void:
 			cl.position = Vector3(cos(ang) * d, p.y, sin(ang) * d)
 		else:
 			cl.position.x += dt * .35
-			if cl.position.x > 34: cl.position.x = -34; cl.position.z = randf_range(-26, 26)
+			if cl.position.x > 46: cl.position.x = -46; cl.position.z = randf_range(-36, 36)
 
 var _rain_vis := 0.0
 func _update_sky(dt: float) -> void:

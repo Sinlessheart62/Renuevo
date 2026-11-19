@@ -98,8 +98,6 @@ func _turbine(n: Node3D) -> void:
 		var c0 := WHITE; var c1 := WHITE
 		rg.ctr = Vector3(0, 0, -1)
 		rg.quad(d * .04 + side, tip + side * .25, tip - side * .3, d * .04 - side * .6, c0, c1)
-		rg.ctr = Vector3(0, 0, 1)
-		rg.quad(d * .04 + side, tip + side * .25, tip - side * .3, d * .04 - side * .6, c0, c1)
 		rg.ctr = Vector3(0, 0, -1)
 		rg.quad(tip * .85 + side * .3, tip + side * .25, tip - side * .3, tip * .85 - side * .4, RUST, RUST)
 	_mi(rg.commit(), rotor)
@@ -388,7 +386,7 @@ func animal(k: String) -> Node3D:
 		"fox": _quad(g, .18, .11, Color("#f2f2f2"), Color("#ffffff"), false, false, .05)
 		"rabbit": _small(g, .1, Color("#b89a7a"), Color("#f2ece0"), true)
 		"hare": _small(g, .12, Color("#eeeeea"), Color("#ffffff"), true)
-		"beaver": _small(g, .13, Color("#7a5236"), Color("#5a3a26"), false)
+		"beaver": _small(g, .13, Color("#9a6a42"), Color("#c89a6a"), false)
 		"frog": _small(g, .06, Color("#5aa83c"), Color("#b6e07a"), false)
 		"lizard": _lizard(g)
 		"heron": _wader(g, Color("#9fb0bf"), Color("#e8eef2"), .3)
@@ -441,8 +439,13 @@ func _quad(g: Geo, L: float, H: float, c: Color, belly: Color, antlers: bool, bi
 func _small(g: Geo, L: float, c: Color, belly: Color, ears: bool) -> void:
 	g.blob(Vector3(0, L * .45, 0), Vector3(L * .4, L * .38, L * .55), c.darkened(.05), c.lightened(.1), 1, .05)
 	g.blob(Vector3(0, L * .72, L * .45), Vector3(L * .34, L * .31, L * .33), c, c.lightened(.12), 1, .03)
-	for sx in [-1, 1]:
-		g.blob(Vector3(sx * L * .17, L * .8, L * .68), Vector3(L * .05, L * .065, L * .04), EYE, EYE.lightened(.2), 1, 0)
+	if L >= .09:
+		for sx in [-1, 1]:
+			g.blob(Vector3(sx * L * .17, L * .8, L * .68), Vector3(L * .05, L * .065, L * .04), EYE, EYE.lightened(.2), 1, 0)
+	else:
+		# ojos saltones claros (rana): se leen mejor que puntos negros
+		for sx in [-1, 1]:
+			g.blob(Vector3(sx * L * .2, L * .98, L * .5), Vector3(L * .12, L * .12, L * .12), belly, belly.lightened(.3), 1, 0)
 	g.blob(Vector3(0, L * .35, -L * .5), Vector3(L * .12, L * .12, L * .12), belly, belly, 0, 0)
 	if ears:
 		for sx in [-1, 1]:
@@ -502,8 +505,8 @@ func _flyer(n: Node3D, body: Node3D, k: String) -> void:
 	var g := Geo.new(hash(k))
 	var c := Color("#e8473f"); var wc := Color("#2f7ad0"); var s := .05
 	match k:
-		"bee": c = Color("#f0c030"); wc = Color(.9, .95, 1, .6); s = .025
-		"butterfly": c = Color("#3a2a20"); wc = [Color("#f29a3a"), Color("#6ab0f2"), Color("#f2e05a")][randi() % 3]; s = .035
+		"bee": c = Color("#f0c030"); wc = Color(.95, .97, 1, 1); s = .025
+		"butterfly": c = Color("#8a6a4a"); wc = [Color("#f29a3a"), Color("#6ab0f2"), Color("#f2e05a")][randi() % 3]; s = .035
 		"parrot": c = Color("#e0402f"); wc = Color("#2f6ad0"); s = .07
 	g.blob(Vector3.ZERO, Vector3(s * .35, s * .35, s), c, c.lightened(.2), 0, 0)
 	if k == "parrot":
@@ -515,8 +518,6 @@ func _flyer(n: Node3D, body: Node3D, k: String) -> void:
 		var wg := Geo.new(3)
 		var span := s * (2.4 if k == "butterfly" else 2.0)
 		wg.ctr = Vector3(0, -1, 0)
-		wg.tri(Vector3.ZERO, Vector3(side * span, 0, s * .6), Vector3(side * span * .8, 0, -s * .9), wc, wc.lightened(.2))
-		wg.ctr = Vector3(0, 1, 0)
 		wg.tri(Vector3.ZERO, Vector3(side * span, 0, s * .6), Vector3(side * span * .8, 0, -s * .9), wc, wc.lightened(.2))
 		_mi(wg.commit(), wn)
 

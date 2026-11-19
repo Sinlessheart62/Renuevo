@@ -13,8 +13,8 @@ signal leaving_started
 signal finished(text: String)
 signal scanned_animal(i: int, a: Dictionary)
 
-const C := 20
-const R := 20
+const C := 30
+const R := 30
 const SKEY := "user://partida.json"
 const PKEY := "user://progreso.json"
 
@@ -148,12 +148,12 @@ func gen(sd: int) -> void:
 		var th := .5
 		var e_at := func(x: int, y: int) -> float:
 			return N.call(x, y) - maxf(0, Vector2(x - C / 2.0 + .5, y - R / 2.0 + .5).length() / (C * .5) - .55) * .6
-		for tries in 8:
+		for tries in 10:
 			var n := 0
 			for y in R:
 				for x in C:
 					if e_at.call(x, y) > th: n += 1
-			if n > 200: break
+			if n > int(C * R * .5): break
 			th -= .04
 		for y in R:
 			for x in C:
@@ -166,8 +166,8 @@ func gen(sd: int) -> void:
 			for x in C:
 				if T[idx(x, y)] != "sea" and touches(x, y, ["sea"]):
 					T[idx(x, y)] = "sand"; H[idx(x, y)] = 1
-		for k in 4: blob.call(3 + r.next() * (C - 6), 3 + r.next() * (R - 6), .6 + r.next() * .8, "rock", "tox")
-		for k in 5:
+		for k in 8: blob.call(3 + r.next() * (C - 6), 3 + r.next() * (R - 6), .6 + r.next() * 1.0, "rock", "tox")
+		for k in 11:
 			var cx := int(r.next() * C); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if T[j] == "tox" and r.next() < .7: T[j] = "dirt"
@@ -184,25 +184,25 @@ func gen(sd: int) -> void:
 		for y in R:
 			for x in C:
 				var d := Vector2(x - vx, y - vy).length()
-				var cone := 5.2 - d * .85
+				var cone := 6.6 - d * .72
 				T[idx(x, y)] = "ash" if N.call(x, y) > .48 else "tox"
 				if cone > 2.4:
 					H[idx(x, y)] = mini(D.MAXH, int(round(cone)))
 					T[idx(x, y)] = "lava" if d < 1.2 else "mnt"
-		for k in 4:
+		for k in 5:
 			var x := vx; var y := vy; var a := r.next() * 6.28
-			for s in 12:
+			for s in 18:
 				x += cos(a) + (r.next() - .5) * .9; y += sin(a) + (r.next() - .5) * .9
 				var xi := int(round(x)); var yi := int(round(y))
 				if not inb(xi, yi): break
 				if s > 1: T[idx(xi, yi)] = "lava"
-		for k in 4: blob.call(r.next() * C, r.next() * R, .6 + r.next() * .9, "rock", "ash")
+		for k in 9: blob.call(r.next() * C, r.next() * R, .6 + r.next() * 1.1, "rock", "ash")
 		var y := 2 + int(r.next() * (R - 4))
 		for x in C:
 			if inb(x, y) and T[idx(x, y)] != "lava" and T[idx(x, y)] != "mnt":
 				T[idx(x, y)] = "bed"; H[idx(x, y)] = maxi(1, H[idx(x, y)] - 1)
 			y = clampi(y + int(round(r.next() * 2 - 1)), 1, R - 2)
-		for k in 5:
+		for k in 11:
 			var cx := int(r.next() * C); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if (T[j] == "tox" or T[j] == "ash") and r.next() < .75: T[j] = "dirt"
@@ -210,23 +210,31 @@ func gen(sd: int) -> void:
 		var mc := 3 + r.next() * (R - 7)
 		for y in R:
 			for x in C:
-				var m: float = 3.6 - x - absf(y - mc) * .22 + (n2.call(x / float(C - 1), y / float(R - 1)) - .5) * 2.4
+				var m: float = 4.8 - x - absf(y - mc) * .22 + (n2.call(x / float(C - 1), y / float(R - 1)) - .5) * 2.4
 				if m > .4:
 					T[idx(x, y)] = "mnt"; H[idx(x, y)] = mini(D.MAXH, 3 + int(round(m * .8)))
 		if region_id == "valle":
-			for k in 3: blob.call(4 + r.next() * (C - 8), r.next() * R, 1 + r.next() * 1.3, "ash", "tox")
+			for k in 6: blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "ash", "tox")
 		else:
-			for k in 4: blob.call(4 + r.next() * (C - 8), r.next() * R, 1 + r.next() * 1.4, "tox", "ice")
-		for k in 4: blob.call(3 + r.next() * (C - 6), r.next() * R, .6 + r.next() * .9, "rock", base)
-		var y := 4 + int(r.next() * (R - 8))
-		for x in range(2, C):
+			for k in 8: blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "tox", "ice")
+		for k in 9: blob.call(4 + r.next() * (C - 8), r.next() * R, .6 + r.next() * 1.1, "rock", base)
+		for rv in 2:
+			_river(r, 4 + int(r.next() * (R / 2 - 6)) + rv * (R / 2))
+		_coast_and_more(r, base)
+	_rock_grid(r)
+
+func _river(r: Mulberry, y0: int) -> void:
+		var y := y0
+		for x in range(3, C):
 			for yy in [y, y + (1 if r.next() < .5 else 0)]:
 				if inb(x, yy) and T[idx(x, yy)] != "mnt":
 					T[idx(x, yy)] = "bed"; H[idx(x, yy)] = 1
 			y = clampi(y + int(round(r.next() * 2 - 1)), 2, R - 3)
+
+func _coast_and_more(r: Mulberry, base: String) -> void:
 		var ph := r.next() * 6
 		for yy in R:
-			var w := 2 + int(round(sin(yy * .5 + ph) * .9 + .3))
+			var w := 3 + int(round(sin(yy * .35 + ph) * 1.2 + .3))
 			var sw := 0 if region_id == "polar" else (2 if r.next() < .5 else 1)
 			for k in w + sw:
 				var j := idx(C - 1 - k, yy)
@@ -234,10 +242,12 @@ func gen(sd: int) -> void:
 					T[j] = "sea"; H[j] = 0
 				else:
 					T[j] = "sand"; H[j] = 1
-		for k in 4:
-			var cx := 4 + int(r.next() * (C - 8)); var cy := int(r.next() * R)
+		for k in 9:
+			var cx := 5 + int(r.next() * (C - 10)); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if T[j] == base and r.next() < .75: T[j] = "dirt"
+
+func _rock_grid(r: Mulberry) -> void:
 	var bad := ["sea","oil","lava","mnt","bed","sand","rock"]
 	for gy in range(2, R, 5):
 		for gx in range(2, C, 5):
@@ -490,12 +500,12 @@ func tick() -> void:
 			if T[j] == "water" or T[j] == "sea" or T[j] == "wet":
 				fl.append(i); break
 	fl.shuffle()
-	for k in mini(3, fl.size()):
+	for k in mini(5, fl.size()):
 		set_type(fl[k], "water"); fx.emit("ring", fl[k], Color(.75, .9, 1))
 	if fl.size() and rng.randf() < .15: Sfx.play("water")
 	# deshielo natural
 	if CL.T > 1:
-		for k in 20:
+		for k in 45:
 			var i := rng.randi() % (C * R)
 			if T[i] == "ice" and rng.randf() < minf(.5, CL.T * .03):
 				var ok := false
@@ -504,7 +514,7 @@ func tick() -> void:
 				if ok:
 					set_type(i, "dirt"); fx.emit("ring", i, Color(.92, .96, 1))
 	# propagación natural
-	for k in 30:
+	for k in 68:
 		var i := rng.randi() % (C * R)
 		var g := T[i]
 		if not D.SPR.has(g):
@@ -717,8 +727,11 @@ func reset_run() -> void:
 func new_game(id: String) -> void:
 	set_region(id)
 	seed_v = rng.randi() & 0xffffff
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--seed="):
+			seed_v = int(a.split("=")[1]); rng.seed = seed_v
 	gen(seed_v)
-	leaves = 60; phase = 1; b3 = 0; gtime = D.DAY * .06
+	leaves = 90; phase = 1; b3 = 0; gtime = D.DAY * .06
 	seen = {}; scanned = {}; known = {}
 	for t in T: known[t] = true
 	play_s = 0; reset_run()

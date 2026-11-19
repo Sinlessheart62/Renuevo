@@ -103,7 +103,7 @@ func lift(pos: Vector3, id: String, factory: Node) -> void:
 	lifts.append([d, model, 0.0, pos])
 
 func beam(pos: Vector3, a: Dictionary) -> void:
-	var target: Vector3 = Vector3(a.x - 10.0, 0, a.y - 10.0)
+	var target: Vector3 = Vector3(a.x - D.C / 2.0, 0, a.y - D.R / 2.0)
 	target.y = world.surface_at(target.x, target.z) + .1
 	var mi := MeshInstance3D.new()
 	var cm := CylinderMesh.new(); cm.top_radius = .02; cm.bottom_radius = .02; cm.height = 1.0; cm.radial_segments = 6

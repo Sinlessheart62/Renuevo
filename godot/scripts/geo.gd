@@ -124,8 +124,8 @@ func leaf_card(p: Vector3, dir: Vector3, w: float, l: float, c0: Color, c1: Colo
 	if side.length() < .001: side = Vector3(w * .5, 0, 0)
 	var tip := p + dir * l
 	var mid := p + dir * l * .45
+	# una sola cara: el shader ilumina el reverso (sin duplicados que parpadeen)
 	tri(p, mid + side, tip, c0, c1, c1); tri(p, tip, mid - side, c0, c1, c1)
-	tri(p, tip, mid + side, c0, c1, c1); tri(p, mid - side, tip, c0, c1, c1)
 
 static var last_arrays: Array = []
 func commit() -> ArrayMesh:
@@ -288,15 +288,16 @@ static func bush(sd: int, flowers := false) -> ArrayMesh:
 	return g.commit()
 
 static func reed(sd: int) -> ArrayMesh:
+	# mata de juncos con espadañas color canela (formas suaves, sin caras planas)
 	var g := Geo.new(sd)
-	for k in 9:
-		var a := g.rng.randf() * TAU; var r := g.rng.randf() * .12
-		var p := Vector3(cos(a) * r, -.05, sin(a) * r)
-		var h := .22 + g.rng.randf() * .18
-		var d := Vector3((g.rng.randf() - .5) * .15, 1, (g.rng.randf() - .5) * .15).normalized()
-		g.leaf_card(p, d, .025, h, Color("#4f7a3a"), Color("#a8c46a"))
-		if k % 3 == 0:
-			g.cyl(p + d * h * .8, .012, .012, .07, 5, Color("#6b4a2a"), Color("#7a5530"), true, true)
+	for k in 8:
+		var a := g.rng.randf() * TAU; var r := g.rng.randf() * .07
+		var p := Vector3(cos(a) * r, 0, sin(a) * r)
+		var h := .22 + g.rng.randf() * .16
+		var d := Vector3(cos(a) * .25, 1, sin(a) * .25).normalized()
+		g.leaf_card(p, d, .045, h, Color("#5d8f3e"), Color("#b8d46a"))
+		if k < 2:
+			g.blob(p + d * h * .9, Vector3(.02, .045, .02), Color("#a8713c"), Color("#c99052"), 1, 0)
 	return g.commit()
 
 static func mangrove(sd: int) -> ArrayMesh:

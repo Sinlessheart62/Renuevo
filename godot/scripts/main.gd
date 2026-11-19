@@ -8,7 +8,7 @@ var cam: Camera3D
 var target := Vector3.ZERO
 var yaw := deg_to_rad(38.0)
 var pitch := deg_to_rad(52.0)
-var dist := 26.0
+var dist := 36.0
 var t_target := Vector3.ZERO
 var t_yaw := yaw
 var t_pitch := pitch
@@ -83,7 +83,7 @@ func _menu() -> void:
 	var nm := ""
 	if s: nm = "%s, fase %d" % [D.REGIONS[s.region].n, int(s.phase)]
 	menu_orbit = true
-	t_dist = 30; t_pitch = deg_to_rad(40)
+	t_dist = 42; t_pitch = deg_to_rad(40)
 	ui.show_menu(s != null, nm)
 
 func _start(id: String) -> void:
@@ -104,7 +104,7 @@ func _begin() -> void:
 	ui.hud.visible = true
 	ui.build_toolbar()
 	Game.begin()
-	t_target = Vector3.ZERO; t_dist = 24; t_pitch = deg_to_rad(52)
+	t_target = Vector3.ZERO; t_dist = 34; t_pitch = deg_to_rad(52)
 	if ship: ship.queue_free(); ship = null
 
 func _to_menu() -> void:
@@ -153,8 +153,8 @@ func _unhandled_input(e: InputEvent) -> void:
 	if ui.any_modal() and not menu_orbit: return
 	if e is InputEventMouseButton:
 		var mb := e as InputEventMouseButton
-		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed: t_dist = clampf(t_dist * .9, 6, 42)
-		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed: t_dist = clampf(t_dist * 1.1, 6, 42)
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP and mb.pressed: t_dist = clampf(t_dist * .9, 6, 60)
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN and mb.pressed: t_dist = clampf(t_dist * 1.1, 6, 60)
 		elif mb.pressed:
 			drag_btn = mb.button_index; drag_start = mb.position; last_mouse = mb.position; drag_moved = false
 		else:
@@ -178,7 +178,7 @@ func _pan(dx: float, dz: float) -> void:
 	var right := Vector3(cos(t_yaw), 0, -sin(t_yaw))
 	var fwd := Vector3(-sin(t_yaw), 0, -cos(t_yaw))
 	t_target += right * dx - fwd * dz
-	t_target.x = clampf(t_target.x, -11, 11); t_target.z = clampf(t_target.z, -11, 11)
+	t_target.x = clampf(t_target.x, -16, 16); t_target.z = clampf(t_target.z, -16, 16)
 
 func _click(pos: Vector2) -> void:
 	var i := _pick(pos)
@@ -195,7 +195,7 @@ func _pick(pos: Vector2) -> int:
 		var p := o + d * t
 		if p.y < -3: break
 		var h: float = world.surface_at(p.x, p.z)
-		if p.y <= h and absf(p.x) < 10 and absf(p.z) < 10:
+		if p.y <= h and absf(p.x) < 15 and absf(p.z) < 15:
 			# refinar
 			var a := t - .08; var b := t
 			for j in 8:
@@ -204,8 +204,8 @@ func _pick(pos: Vector2) -> int:
 				if q.y <= world.surface_at(q.x, q.z): b = m
 				else: a = m
 			var hit := o + d * b
-			var tx := int(floor(hit.x + 10)); var tz := int(floor(hit.z + 10))
-			if tx >= 0 and tz >= 0 and tx < 20 and tz < 20: return tz * 20 + tx
+			var tx := int(floor(hit.x + 15)); var tz := int(floor(hit.z + 15))
+			if tx >= 0 and tz >= 0 and tx < D.C and tz < D.R: return tz * D.C + tx
 			return -1
 		t += .08
 	return -1
@@ -225,8 +225,8 @@ func _process(dt: float) -> void:
 		if Input.is_key_pressed(KEY_E): t_yaw -= dt * 1.6
 		if Input.is_key_pressed(KEY_R): t_pitch = clampf(t_pitch + dt * 1.0, deg_to_rad(22), deg_to_rad(82))
 		if Input.is_key_pressed(KEY_F): t_pitch = clampf(t_pitch - dt * 1.0, deg_to_rad(22), deg_to_rad(82))
-		if Input.is_key_pressed(KEY_Z) or Input.is_key_pressed(KEY_EQUAL) or Input.is_key_pressed(KEY_KP_ADD): t_dist = clampf(t_dist * (1 - dt * 1.2), 6, 42)
-		if Input.is_key_pressed(KEY_X) or Input.is_key_pressed(KEY_MINUS) or Input.is_key_pressed(KEY_KP_SUBTRACT): t_dist = clampf(t_dist * (1 + dt * 1.2), 6, 42)
+		if Input.is_key_pressed(KEY_Z) or Input.is_key_pressed(KEY_EQUAL) or Input.is_key_pressed(KEY_KP_ADD): t_dist = clampf(t_dist * (1 - dt * 1.2), 6, 60)
+		if Input.is_key_pressed(KEY_X) or Input.is_key_pressed(KEY_MINUS) or Input.is_key_pressed(KEY_KP_SUBTRACT): t_dist = clampf(t_dist * (1 + dt * 1.2), 6, 60)
 	if menu_orbit:
 		t_yaw += dt * .05
 		t_target = Vector3.ZERO
@@ -245,7 +245,7 @@ func _process(dt: float) -> void:
 	# desenfoque de maqueta (tilt-shift): más fuerte con la cámara inclinada y cerca
 	var tsm: ShaderMaterial = tilt.material
 	var tk := clampf(1.0 - (rad_to_deg(pitch) - 22.0) / 70.0, 0.15, 1.0)
-	tsm.set_shader_parameter("strength", tk * (.85 - clampf(dist / 42.0, 0, 1) * .4))
+	tsm.set_shader_parameter("strength", tk * (.85 - clampf(dist / 60.0, 0, 1) * .4))
 	# casilla bajo el ratón
 	if playing and drag_btn == 0:
 		var i := _pick(get_viewport().get_mouse_position())
@@ -306,7 +306,7 @@ func _ambience(_dt: float) -> void:
 	var rain: float = Game.wx.rain
 	var cold: bool = Game.CL.T < 0
 	var lava := 0.25 if Game.region_id == "volcan" else 0.0
-	var zoom := clampf(1.2 - dist / 42.0, .3, 1.0)
+	var zoom := clampf(1.3 - dist / 60.0, .3, 1.0)
 	Sfx.set_ambience({
 		"amb_wind": .25 + (1 - gr) * .25 + (.2 if cold else 0.0),
 		"amb_rain": rain * (.0 if cold else .7),
@@ -431,6 +431,11 @@ func _auto_step(dt: float) -> void:
 		if args.has("nossil"): world.env.ssil_enabled = false
 		if args.has("nossao"): world.env.ssao_enabled = false
 		if args.has("novol"): world.env.volumetric_fog_enabled = false
+		if args.has("noreeds"):
+			for k in world.veg_variants:
+				if k.begins_with("reed"): world.veg_variants[k].visible = false
+		if args.has("nowater"): world.water_mm.visible = false
+		if args.has("nofauna"): Game.anim.clear(); Game.fauna_changed.emit()
 		if args.has("nodof"): tilt.visible = false
 		if args.has("cam"):
 			var c: PackedStringArray = args.cam.split(",")
@@ -476,7 +481,7 @@ func _auto_action() -> void:
 	else:
 		if G.scanned.size() < 3:
 			var nobs := 0
-			for i in 400:
+			for i in D.C * D.R:
 				if G.B[i] == "obs": nobs += 1
 			if nobs < 4: tries = ["obs"]
 		else:
@@ -487,8 +492,8 @@ func _auto_action() -> void:
 		if t.is_empty() or not G.in_reg(t): continue
 		var best := -1; var bs := -1.0
 		for k in 160:
-			var i := G.rng.randi() % 400
-			var x := i % 20; var y := i / 20
+			var i := G.rng.randi() % (D.C * D.R)
+			var x := i % D.C; var y := i / D.C
 			if G.check(id, x, y) != "": continue
 			var sc := G.rng.randf()
 			if id == "dep" or id == "asp":
@@ -506,7 +511,7 @@ func _auto_action() -> void:
 			if id == "rec" and G.B[i] == "obs" and G.scanned.size() < 3: continue
 			if sc > bs: bs = sc; best = i
 		if best >= 0:
-			G.apply(id, best % 20, best / 20)
+			G.apply(id, best % D.C, best / D.C)
 			return
 
 func _nan_test() -> void:
@@ -533,15 +538,15 @@ func _nan_test() -> void:
 
 func _lush() -> void:
 	var G := Game
-	for i in 400:
+	for i in D.C * D.R:
 		var t: String = G.T[i]
 		if t in ["tox", "ash", "dirt", "ice"]:
 			var r := G.rng.randf()
 			G.T[i] = "forest" if r < .35 else ("flower" if r < .55 else "grass")
 		elif t == "bed": G.T[i] = "water"
-	for i in 400:
-		if G.T[i] in ["grass", "flower"] and G.touches(i % 20, i / 20, ["water"]) and G.rng.randf() < .7: G.T[i] = "wet"
-		if G.T[i] == "sand" and G.touches(i % 20, i / 20, ["sea"]) and G.rng.randf() < .5 and G.region_id in ["valle", "tropico"]: G.T[i] = "mang"
+	for i in D.C * D.R:
+		if G.T[i] in ["grass", "flower"] and G.touches(i % D.C, i / D.C, ["water"]) and G.rng.randf() < .7: G.T[i] = "wet"
+		if G.T[i] == "sand" and G.touches(i % D.C, i / D.C, ["sea"]) and G.rng.randf() < .5 and G.region_id in ["valle", "tropico"]: G.T[i] = "mang"
 	G.compute_power()
 	G.map_rebuilt.emit()
 	G.hud()

@@ -1,8 +1,8 @@
 extends Node
 ## Datos fijos del juego: terrenos, herramientas, regiones y especies.
 
-const C := 20
-const R := 20
+const C := 30
+const R := 30
 const MAXH := 5
 const DAY := 300.0
 const HS := 0.42          # altura de un escalón de terreno (unidades de mundo)

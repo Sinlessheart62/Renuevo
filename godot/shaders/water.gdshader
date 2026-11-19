@@ -73,6 +73,7 @@ void fragment(){
 	float fres = pow(1.0 - clamp(dot(normalize(VIEW), NORMAL), 0.0, 1.0), 4.0);
 	ALPHA = clamp(mix(0.55, 0.97, dfac) + foam + fres * 0.3, 0.0, 1.0) * smoothstep(0.0, 0.6, age);
 	if (k > 1.5 && k < 2.5) ALPHA = max(ALPHA, 0.92 * smoothstep(0.0, 0.6, age));
+	if (k > 2.5) ALPHA *= 0.55;
 	ROUGHNESS = (k > 1.5 && k < 2.5) ? 0.08 : 0.04 + foam * 0.5;
 	SPECULAR = 0.6;
 	METALLIC = 0.0;

@@ -679,11 +679,11 @@ func make_thumbs(factory: Node, parent: Node) -> void:
 		var cam := Camera3D.new()
 		cam.fov = 32
 		vp.add_child(cam)
-		var l := DirectionalLight3D.new(); l.rotation = Vector3(-.9, .7, 0); l.light_energy = 1.3
+		var l := DirectionalLight3D.new(); l.rotation = Vector3(-.9, .7, 0); l.light_energy = .85
 		vp.add_child(l)
 		var e := WorldEnvironment.new(); var env := Environment.new()
 		env.background_mode = Environment.BG_CLEAR_COLOR
-		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; env.ambient_light_color = Color(.85, .82, .78); env.ambient_light_energy = .9
+		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; env.ambient_light_color = Color(.8, .8, .85); env.ambient_light_energy = .5
 		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 		e.environment = env; vp.add_child(e)
 		var m: Node3D

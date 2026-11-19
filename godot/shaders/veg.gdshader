@@ -41,6 +41,7 @@ void vertex(){
 }
 
 void fragment(){
+	if (dot(NORMAL, VIEW) < 0.0) NORMAL = -NORMAL;
 	vec3 c;
 	if (is_grass > 0.5) {
 		c = mix(icol * 0.42, icol * 0.95 * tip_tint.rgb, smoothstep(0.0, 1.0, hgt));

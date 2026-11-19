@@ -1,6 +1,6 @@
 // Renuevo: guarda el juego en el teléfono para jugar sin internet
-const CACHE = 'renuevo-v5';
-const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
+const CACHE = 'renuevo-v6';
+const FILES = ['./', './index.html', './three.min.js', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));

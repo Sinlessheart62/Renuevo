@@ -147,7 +147,7 @@ button:focus-visible{outline:3px solid #f3d36b;outline-offset:2px}
     <li><b>Crea ecosistemas</b> con viveros, colmenas, hidropónicos y manglares; cada uno pide su clima de temperatura, humedad y fertilidad.</li>
     <li><b>Registra la fauna</b> con un observatorio, recicla todo y sube a la nave.</li>
   </ol>
-  <small>Arrastra para moverte, pellizca para acercar y gira la isla con dos dedos (con el mouse: clic derecho o Shift para girar). En el celular, el primer toque muestra el alcance y el segundo construye. El progreso se guarda solo.</small>
+  <small>Un dedo: mover. Dos dedos: pellizca para acercar, gíralos para rotar y deslízalos juntos hacia arriba o abajo para inclinar la vista (con el mouse: clic derecho o Shift). En el celular, el primer toque muestra el alcance y el segundo construye. El progreso se guarda solo.</small>
   <div class="row"><button class="btn" id="cont" hidden>Continuar</button><button class="btn" id="go">Elegir región</button></div>
 </div></div>
 <div class="ov" id="regs" hidden><div class="card">
@@ -1141,12 +1141,12 @@ function center(){cam.tx=0;cam.tz=0;cam.dist=W<H?44:28;cam.az=Math.PI*.25;cam.el
 function initInput(){const ptr=new Map();let gs=null;
   cv.addEventListener('pointerdown',e=>{audioInit();try{cv.setPointerCapture(e.pointerId)}catch(_){}ptr.set(e.pointerId,{x:e.clientX,y:e.clientY,b:e.button});
     if(ptr.size===1)gs={m:(e.button===2||e.shiftKey)?'rot':'drag',sx:e.clientX,sy:e.clientY,tx:cam.tx,tz:cam.tz,az:cam.az,el:cam.el,moved:false,multi:false};
-    else if(ptr.size===2){const[a,b]=[...ptr.values()];gs={m:'pinch',d:Math.hypot(a.x-b.x,a.y-b.y)||1,an:Math.atan2(b.y-a.y,b.x-a.x),dist:cam.dist,az:cam.az,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,tx:cam.tx,tz:cam.tz,multi:true}}});
+    else if(ptr.size===2){const[a,b]=[...ptr.values()];gs={m:'pinch',d:Math.hypot(a.x-b.x,a.y-b.y)||1,an:Math.atan2(b.y-a.y,b.x-a.x),dist:cam.dist,az:cam.az,el:cam.el,mx:(a.x+b.x)/2,my:(a.y+b.y)/2,tx:cam.tx,tz:cam.tz,multi:true}}});
   cv.addEventListener('contextmenu',e=>e.preventDefault());
   cv.addEventListener('pointermove',e=>{if(e.pointerType==='mouse'&&!ptr.size){if(started&&!leaving)ghost=pickTile(e.clientX,e.clientY);return}
     if(!ptr.has(e.pointerId))return;ptr.get(e.pointerId).x=e.clientX;ptr.get(e.pointerId).y=e.clientY;if(!gs)return;
-    if(gs.m==='pinch'&&ptr.size>=2){const[a,b]=[...ptr.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,an=Math.atan2(b.y-a.y,b.x-a.x);cam.dist=clamp(gs.dist*gs.d/d,6,58);cam.az=gs.az+(an-gs.an);const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;pan(gs,mx-gs.mx,my-gs.my)}
-    else{const dx=e.clientX-gs.sx,dy=e.clientY-gs.sy;if(Math.hypot(dx,dy)>8)gs.moved=true;if(!gs.moved)return;if(gs.m==='rot'){cam.az=gs.az+dx*.008;cam.el=clamp(gs.el-dy*.005,.42,1.35)}else pan(gs,dx,dy)}});
+    if(gs.m==='pinch'&&ptr.size>=2){const[a,b]=[...ptr.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,an=Math.atan2(b.y-a.y,b.x-a.x);cam.dist=clamp(gs.dist*gs.d/d,6,58);cam.az=gs.az+(an-gs.an);const my=(a.y+b.y)/2;cam.el=clamp(gs.el+(my-gs.my)*.006,.35,1.45)}
+    else{const dx=e.clientX-gs.sx,dy=e.clientY-gs.sy;if(Math.hypot(dx,dy)>8)gs.moved=true;if(!gs.moved)return;if(gs.m==='rot'){cam.az=gs.az+dx*.008;cam.el=clamp(gs.el-dy*.005,.35,1.45)}else pan(gs,dx,dy)}});
   const up=e=>{if(!ptr.has(e.pointerId))return;ptr.delete(e.pointerId);if(gs&&gs.m==='drag'&&!gs.moved&&!gs.multi&&ptr.size===0)tapAt(e.clientX,e.clientY,e.pointerType);
     if(ptr.size===0)gs=null;else if(ptr.size===1&&gs&&gs.m==='pinch'){const[a]=[...ptr.values()];gs={m:'drag',sx:a.x,sy:a.y,tx:cam.tx,tz:cam.tz,moved:true,multi:true}}};
   cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up);

@@ -141,8 +141,8 @@ button:focus-visible{outline:3px solid #f3d36b;outline-offset:2px}
   <h1>Renuevo</h1>
   <p>Cuatro tierras envenenadas: un valle, un archipiélago, una tundra y una caldera volcánica. Devuélveles la vida… y vete sin dejar huella.</p>
   <ol>
-    <li><b>Sana el suelo:</b> turbinas, depuradores y aspersores. Cada casilla verde da una hoja.</li>
-    <li><b>Crea ecosistemas:</b> bosques, humedales, flores y manglares, cada uno con su clima ideal de temperatura, humedad y fertilidad.</li>
+    <li><b>Sana el suelo:</b> turbinas sobre roca, depuradores, aspersores y bombas que llenan los cauces secos. Cada casilla verde da una hoja.</li>
+    <li><b>Crea ecosistemas</b> con viveros, colmenas, hidropónicos y manglares; cada uno pide su clima de temperatura, humedad y fertilidad.</li>
     <li><b>Registra la fauna</b> con un observatorio, recicla todo y sube a la nave.</li>
   </ol>
   <small>Arrastra para moverte y pellizca para acercar. En el celular, el primer toque muestra el alcance y el segundo construye. El progreso se guarda solo.</small>
@@ -170,35 +170,36 @@ const cv=$('cv'),ctx=cv.getContext('2d');
 const C=20,R=20,TW=64,TH=32,HZ=11,SLAB=30,PAD=50,CS=2,MAXH=5,DAY=300;
 const OX=R*TW/2+PAD,OY=PAD+MAXH*HZ+TH;
 const WW=(C+R)*TW/2+PAD*2,WH=(C+R)*TH/2+MAXH*HZ+SLAB+PAD*2+TH*2;
-const TY=['tox','dirt','grass','forest','water','wet','flower','rock','mnt','sea','sand','mang','ash','ice','lava','oil'],BL=['','tur','dep','asp','geo','sol','nub','fri','obs'];
+const TY=['tox','dirt','grass','forest','water','wet','flower','rock','mnt','sea','sand','mang','ash','ice','lava','oil','bed'],BL=['','tur','dep','asp','geo','sol','nub','fri','obs','viv','col','hid','pum'];
 const GREEN=new Set(['grass','forest','wet','flower','mang']),NOLAND=new Set(['rock','mnt','sea','lava','oil']),DIRTY=new Set(['tox','ash','oil']),WATERY=new Set(['water','wet','sea','mang','oil']);
-const NEEDPOW=new Set(['dep','asp','sol','nub','fri']);
+const NEEDPOW=new Set(['dep','asp','sol','nub','fri','pum','viv','hid']);const SUNK=new Set([...WATERY,'bed']);const SWAYR=/^(pine|spine|broad|palm|reed|mang|fbush|bush)/;
 const REGIONS={
-  valle:{n:'Valle templado',d:'Un valle entre montañas nevadas y el mar, envenenado por décadas de industria. El clima ya es amable.',t0:15,h0:38,g1:.45,climPh:2,fn:'Bosque',sp:['deer','rabbit','heron','duck','bee','butterfly'],sea:['#3274a9','#2d6b9f'],sw:'linear-gradient(135deg,#7b5f62 0 45%,#84bb53 45% 75%,#3274a9 75%)',
+  valle:{n:'Valle templado',d:'Un valle entre montañas nevadas y el mar, envenenado por décadas de industria. El clima ya es amable.',t0:15,h0:38,g1:.45,climPh:2,fn:'Bosque',sp:['deer','beaver','frog','bear','heron','butterfly'],sea:['#3274a9','#2d6b9f'],sw:'linear-gradient(135deg,#7b5f62 0 45%,#84bb53 45% 75%,#3274a9 75%)',
     g2:[['Bosque','forest',.12],['Humedal','wet',.05],['Flores','flower',.06],['Manglar','mang',.03],['Limpio','clean',.95]]},
-  tropico:{n:'Archipiélago tropical',d:'Islas cubiertas de residuos en un mar manchado de petróleo. Hace calor: la selva necesita que enfríes el aire.',t0:31,h0:60,g1:.40,climPh:1,fn:'Selva',sp:['parrot','turtle','fish','heron','butterfly','bee'],sea:['#2b9bb5','#268ca6'],sw:'linear-gradient(135deg,#2b9bb5 0 35%,#ddc692 35% 50%,#4d8f3c 50% 80%,#2a3a48 80%)',
+  tropico:{n:'Archipiélago tropical',d:'Islas cubiertas de residuos en un mar manchado de petróleo. Hace calor: la selva necesita que enfríes el aire.',t0:31,h0:60,g1:.40,climPh:1,fn:'Selva',sp:['parrot','turtle','flamingo','manta','butterfly','bee'],sea:['#2b9bb5','#268ca6'],sw:'linear-gradient(135deg,#2b9bb5 0 35%,#ddc692 35% 50%,#4d8f3c 50% 80%,#2a3a48 80%)',
     g2:[['Selva','forest',.12],['Manglar','mang',.06],['Flores','flower',.05],['Limpio','clean',.95]]},
-  polar:{n:'Tundra helada',d:'Permafrost y minas abandonadas junto a un mar frío. Sin calor no crece nada: derrite el hielo con espejos solares.',t0:-8,h0:34,g1:.35,climPh:1,fn:'Taiga',sp:['reindeer','fox','hare','seal','goose','butterfly'],sea:['#2f5f8a','#2a5680'],sw:'linear-gradient(135deg,#e6f0f6 0 45%,#7b5f62 45% 60%,#5c9540 60% 80%,#2f5f8a 80%)',
-    g2:[['Taiga','forest',.10],['Humedal','wet',.04],['Flores','flower',.05],['Deshielo','melt',.75],['Limpio','clean',.95]]},
+  polar:{n:'Tundra helada',d:'Permafrost y minas abandonadas junto a un mar frío. Sin calor no crece nada: derrite el hielo con espejos solares.',t0:-8,h0:34,g1:.35,climPh:1,fn:'Taiga',sp:['reindeer','fox','hare','seal','wolf','whale'],sea:['#2f5f8a','#2a5680'],sw:'linear-gradient(135deg,#e6f0f6 0 45%,#7b5f62 45% 60%,#5c9540 60% 80%,#2f5f8a 80%)',
+    g2:[['Taiga','forest',.10],['Humedal','wet',.04],['Flores','flower',.04],['Deshielo','melt',.75],['Limpio','clean',.95]]},
   volcan:{n:'Caldera volcánica',d:'Ríos de lava, ceniza y aire muy seco. La energía sale de la tierra y la humedad hay que fabricarla.',t0:22,h0:14,g1:.35,climPh:1,fn:'Bosque',sp:['goat','lizard','rabbit','bee','butterfly','duck'],sea:null,sw:'linear-gradient(135deg,#3a2b27 0 40%,#ff7a1a 40% 46%,#56504d 46% 75%,#84bb53 75%)',
-    g2:[['Bosque','forest',.08],['Flores','flower',.07],['Humedal','wet',.04],['Limpio','clean',.95]]}};
+    g2:[['Bosque','forest',.08],['Flores','flower',.05],['Humedal','wet',.04],['Limpio','clean',.95]]}};
 const RORDER=['valle','tropico','polar','volcan'];
 const TOOLS=[
- {id:'tur',n:'Turbina',c:6,ph:1,b:1,d:'Energía radio 2 (3 en montaña)'},
- {id:'geo',n:'Geotérmica',c:10,ph:1,b:1,r:['volcan'],d:'Sobre lava: energía radio 3 y calor'},
+ {id:'tur',n:'Turbina',c:6,ph:1,b:1,d:'Sobre roca: energía radio 3 para 6 edificios'},
+ {id:'geo',n:'Geotérmica',c:10,ph:1,b:1,r:['volcan'],d:'Sobre lava: energía radio 4 y calor'},
  {id:'dep',n:'Depurador',c:8,ph:1,b:1,d:'Limpia toxinas, ceniza y petróleo'},
  {id:'asp',n:'Aspersor',c:10,ph:1,b:1,d:'Tierra → pasto en radio 2'},
- {id:'can',n:'Canal',c:2,ph:1,d:'Agua: reverdece la orilla y da humedad'},
- {id:'sol',n:'Espejo solar',c:12,clim:1,b:1,d:'+3 °C y derrite hielo en radio 2'},
+ {id:'pum',n:'Bomba',c:8,ph:1,b:1,d:'Sobre un cauce seco: lo llena de agua'},
+ {id:'can',n:'Canal',c:2,ph:1,d:'Excava cauce; se llena si toca agua'},
+ {id:'sol',n:'Espejo solar',c:12,clim:1,b:1,d:'+3 °C y derrite hielo en radio 3'},
  {id:'nub',n:'Torre de nubes',c:12,clim:1,b:1,d:'+10% de humedad'},
  {id:'fri',n:'Enfriador',c:12,clim:1,b:1,d:'−3 °C'},
- {id:'bos',n:'Bosque',c:5,ph:2,d:'Sobre pasto; se expande'},
- {id:'hum',n:'Humedal',c:5,ph:2,d:'Pasto que toque el agua'},
- {id:'flo',n:'Flores',c:4,ph:2,d:'Sobre pasto; atrae polinizadores'},
+ {id:'viv',n:'Vivero',c:10,ph:2,b:1,d:'Sobre pasto: hace crecer bosque en radio 2'},
+ {id:'col',n:'Colmena',c:8,ph:2,b:1,d:'Sobre bosque: flores en el pasto a 3 casillas'},
+ {id:'hid',n:'Hidropónico',c:10,ph:2,b:1,d:'Mejora un aspersor junto al agua: crea humedal'},
  {id:'man',n:'Manglar',c:5,ph:2,r:['valle','tropico'],d:'Arena que toque el mar'},
  {id:'obs',n:'Observatorio',c:15,ph:3,b:1,d:'Registra animales en radio 3'},
- {id:'rec',n:'Reciclar',c:0,ph:1,d:'Retira un edificio (+50%)'}];
-const NOBUILD3=['tur','geo','dep','asp','can','sol','nub','fri'];
+ {id:'rec',n:'Reciclar',c:0,ph:1,d:'Un dron se lleva el edificio (+50%)'}];
+const NOBUILD3=['tur','geo','dep','asp','pum','can','sol','nub','fri','viv','col','hid'];
 const LEAF='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4C9 4 4 9 4 17c0 1 .2 2 .5 3 .6-3 3-7 8.5-9-4 3-6 6-6.5 9 9 0 13.5-6 13.5-16z"/></svg>';
 const S='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">';
 const SND_ON=S+'<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/></svg>',SND_OFF=S+'<path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>';
@@ -220,11 +221,18 @@ const SPEC={
  seal:{n:'Foca',d:'Descansa flotando cerca de la costa limpia.',req:'Aparece cuando la costa reverdece.'},
  goose:{n:'Ganso',d:'Llega en primavera a los canales y lagunas.',req:'Aparece con canales de agua.'},
  goat:{n:'Cabra montés',d:'Trepa entre rocas y pastizales sin miedo al vacío.',req:'Aparece con pasto cerca de las rocas.'},
- lizard:{n:'Lagartija',d:'Toma el sol sobre piedras calientes.',req:'Aparece cuando la caldera reverdece.'}};
+ lizard:{n:'Lagartija',d:'Toma el sol sobre piedras calientes.',req:'Aparece cuando la caldera reverdece.'},
+ beaver:{n:'Castor',d:'Nada en los canales y construye diques con ramas del bosque.',req:'Necesita canales de agua junto a un bosque.'},
+ frog:{n:'Rana',d:'Salta entre nenúfares y croa al anochecer.',req:'Aparece con humedales.'},
+ bear:{n:'Oso',d:'Recorre el bosque buscando bayas y flores.',req:'Necesita un bosque grande y prados de flores.'},
+ flamingo:{n:'Flamenco',d:'Descansa en una pata en las aguas someras.',req:'Aparece con humedales o manglares extensos.'},
+ manta:{n:'Mantarraya',d:'Planea bajo el agua turquesa cerca de los manglares.',req:'Aparece con manglares grandes.'},
+ wolf:{n:'Lobo',d:'Sigue a las manadas de renos a distancia.',req:'Solo llega cuando hay renos que seguir.'},
+ whale:{n:'Ballena',d:'Sale a respirar lanzando un chorro de agua.',req:'Aparece cuando gran parte de la tierra reverdece.'}};
 const WANT={deer:s=>Math.min(8,s.forest/8|0),rabbit:s=>Math.min(6,(s.grass+s.flower)/25|0),heron:s=>Math.min(6,s.wet/4|0),duck:s=>Math.min(6,s.water/6|0),bee:s=>Math.min(10,s.flower/5|0),butterfly:s=>Math.min(8,s.flower/7|0),fish:s=>Math.min(6,s.mang/3|0),
- parrot:s=>Math.min(8,s.forest/6|0),turtle:s=>Math.min(5,s.mang/4|0),reindeer:s=>Math.min(6,s.forest/7|0),fox:s=>Math.min(4,(s.grass+s.flower)/22|0),hare:s=>Math.min(6,(s.grass+s.flower)/18|0),seal:s=>Math.min(4,s.green/35|0),goose:s=>Math.min(6,s.water/5|0),goat:s=>Math.min(6,(s.grass+s.flower)/20|0),lizard:s=>Math.min(6,s.green/25|0)};
-const HAB={deer:['forest','grass','flower'],rabbit:['grass','flower'],heron:['wet'],duck:['water'],bee:['flower'],butterfly:['flower'],fish:['sea'],parrot:['forest'],turtle:['sand','mang'],reindeer:['forest','grass','flower'],fox:['grass','flower','forest'],hare:['grass','flower'],seal:['sea'],goose:['water','wet'],goat:['grass','flower','rock'],lizard:['grass','rock','sand','flower']};
-const SPD={deer:.45,rabbit:.7,heron:.18,duck:.25,bee:.9,butterfly:.5,fish:.35,parrot:1,turtle:.12,reindeer:.4,fox:.6,hare:.75,seal:.15,goose:.25,goat:.45,lizard:.8};
+ parrot:s=>Math.min(8,s.forest/6|0),turtle:s=>Math.min(5,s.mang/4|0),reindeer:s=>Math.min(6,s.forest/7|0),fox:s=>Math.min(4,(s.grass+s.flower)/22|0),hare:s=>Math.min(6,(s.grass+s.flower)/18|0),seal:s=>Math.min(4,s.green/35|0),goose:s=>Math.min(6,s.water/5|0),goat:s=>Math.min(6,(s.grass+s.flower)/20|0),lizard:s=>Math.min(6,s.green/25|0),beaver:s=>s.forest>=6?Math.min(3,s.water/6|0):0,frog:s=>Math.min(6,s.wet/3|0),bear:s=>s.forest>=20&&s.flower>=8?Math.min(2,s.forest/20|0):0,flamingo:s=>Math.min(6,(s.wet+s.mang)/6|0),manta:s=>Math.min(3,s.mang/6|0),wolf:s=>Math.min(3,Math.max(0,(s.reindeer||0)-1)),whale:s=>s.green/s.land>.4?(s.green/s.land>.6?2:1):0};
+const HAB={deer:['forest','grass','flower'],rabbit:['grass','flower'],heron:['wet'],duck:['water'],bee:['flower'],butterfly:['flower'],fish:['sea'],parrot:['forest'],turtle:['sand','mang'],reindeer:['forest','grass','flower'],fox:['grass','flower','forest'],hare:['grass','flower'],seal:['sea'],goose:['water','wet'],goat:['grass','flower','rock'],lizard:['grass','rock','sand','flower'],beaver:['water'],frog:['wet'],bear:['forest','grass','flower'],flamingo:['wet','mang'],manta:['sea'],wolf:['forest','grass','flower'],whale:['sea']};
+const SPD={deer:.45,rabbit:.7,heron:.18,duck:.25,bee:.9,butterfly:.5,fish:.35,parrot:1,turtle:.12,reindeer:.4,fox:.6,hare:.75,seal:.15,goose:.25,goat:.45,lizard:.8,beaver:.3,frog:.5,bear:.3,flamingo:.15,manta:.3,wolf:.55,whale:.12};
 
 let regionId='valle',REG=REGIONS.valle;
 let G=[],ORDER=[],CEN=[],BB=[],POW=[],SRC=[],seed=1,leaves=60,phase=1,b3=0,tool='tur',ghost=null,won=false,started=false,leaving=null;
@@ -232,7 +240,7 @@ let parts=[],anim=[],flocks=[],seen=new Set(),scanned=new Set(),known=new Set(),
 let cam={x:0,y:0,z:.6},W=1,H=1,dpr=1,zMin=.3,zMax=2.4;
 let wx={on:false,until:0,rain:0},drops=[],clouds=[],CL={T:15,H:40,F:20};
 let dirty=false,lastSave=0,saved=null,dbDoc=null,dbProg=null,writing=false,queued=null,rsArm=0,toastT,lastStats=null,lastWarn=0;
-let prog={done:{}};
+let prog={done:{}},COV=[],LOAD=[],SHOWCAP=false,lifts=[];
 const cache=document.createElement('canvas');cache.width=Math.ceil(WW*CS);cache.height=Math.ceil(WH*CS);const cc=cache.getContext('2d');
 const dirtyT=new Set();
 
@@ -286,6 +294,8 @@ function makeSprites(){
     [[14,11,8],[8,13,5],[20,13,5],[14,6,5.5]].forEach(([x,y,s])=>Ci(c,x,y,s,v?'#2f6e45':'#2a6440'));[[13,10,6],[7.5,12,3.5],[19,12,3.6],[13,5.5,3.8]].forEach(([x,y,s])=>Ci(c,x-.8,y-.8,s,'#4a9158'));Ci(c,11,6,2,'#6cb56f')}));
   [0,1].forEach(v=>spr('dead'+v,20,46,10,44,c=>{E(c,12,44,5,1.8,'rgba(0,0,0,.25)');c.strokeStyle='#3b2d24';c.lineWidth=1.3;c.beginPath();c.moveTo(10,44);c.lineTo(10.4,4);c.stroke();c.lineWidth=.7;
     for(let k=0;k<11;k++){const y=8+k*3.2,w=2+k*.55;c.beginPath();c.moveTo(10.2,y);c.lineTo(10.2-w,y+2.2+v*.6);c.moveTo(10.2,y+1);c.lineTo(10.2+w,y+3);c.stroke()}}));
+  [['fog','rgba(150,170,90,.5)','rgba(130,100,140,.3)'],['fogA','rgba(150,150,150,.45)','rgba(110,105,100,.3)']].forEach(([k,a,b])=>spr(k,60,30,30,15,c=>{c.translate(30,15);c.scale(1,.5);const g=c.createRadialGradient(0,0,0,0,0,28);g.addColorStop(0,a);g.addColorStop(.5,b);g.addColorStop(1,'rgba(130,100,140,0)');c.fillStyle=g;c.fillRect(-30,-30,60,60)}));
+  spr('cloud',140,60,70,50,c=>{const B=[[40,38,18],[62,30,22],[88,34,19],[108,40,14],[28,44,12],[75,44,18]];B.forEach(([x,y,r])=>Ci(c,x,y+4,r,'rgba(170,185,205,.55)'));B.forEach(([x,y,r])=>Ci(c,x,y,r,'rgba(255,255,255,.92)'));B.forEach(([x,y,r])=>Ci(c,x-r*.25,y-r*.3,r*.55,'#ffffff'))});
 }
 
 /* ================= mapas por región ================= */
@@ -308,6 +318,7 @@ function gen(sd){
     for(let y=0;y<R;y++)for(let x=0;x<C;x++){const g=at(x,y),d=Math.hypot(x-vx,y-vy),cone=5.2-d*.85;g.t=N(x,y)>.48?'ash':'tox';if(cone>2.4){g.h=Math.min(MAXH,Math.round(cone));g.t=d<1.2?'lava':'mnt'}}
     for(let k=0;k<4;k++){let x=vx,y=vy;const a=r()*6.28;for(let s=0;s<12;s++){x+=Math.cos(a)+(r()-.5)*.9;y+=Math.sin(a)+(r()-.5)*.9;const g=at(Math.round(x),Math.round(y));if(!g)break;if(s>1)g.t='lava'}}
     for(let k=0;k<4;k++)blob(r()*C,r()*R,.6+r()*.9,'rock','ash');
+    {let y=2+(r()*(R-4)|0);for(let x=0;x<C;x++){const g=at(x,y);if(g&&g.t!=='lava'&&g.t!=='mnt'){g.t='bed';g.h=Math.max(1,g.h-1)}y=clamp(y+Math.round(r()*2-1),1,R-2)}}
     for(let k=0;k<5;k++){const cx=r()*C|0,cy=r()*R|0;for(const[a,b]of[[cx,cy],...nb4(cx,cy)]){const q=at(a,b);if((q.t==='tox'||q.t==='ash')&&r()<.75)q.t='dirt'}}
   }else{
     const mc=3+r()*(R-7);
@@ -316,18 +327,19 @@ function gen(sd){
     else for(let k=0;k<4;k++)blob(4+r()*(C-8),r()*R,1+r()*1.4,'tox','ice');
     for(let k=0;k<4;k++)blob(3+r()*(C-6),r()*R,.6+r()*.9,'rock',base);
     let y=4+(r()*(R-8)|0);
-    for(let x=2;x<C;x++){for(const yy of[y,y+(r()<.5?1:0)]){const g=at(x,yy);if(g&&g.t!=='mnt'){g.t=regionId==='polar'?'ice':'dirt';g.h=1}}y=clamp(y+Math.round(r()*2-1),2,R-3)}
+    for(let x=2;x<C;x++){for(const yy of[y,y+(r()<.5?1:0)]){const g=at(x,yy);if(g&&g.t!=='mnt'){g.t='bed';g.h=1}}y=clamp(y+Math.round(r()*2-1),2,R-3)}
     const ph=r()*6;
     for(let yy=0;yy<R;yy++){const w=2+Math.round(Math.sin(yy*.5+ph)*.9+.3),sw=regionId==='polar'?0:r()<.5?2:1;for(let k=0;k<w+sw;k++){const g=at(C-1-k,yy);if(k<w){g.t='sea';g.h=0}else{g.t='sand';g.h=1}}}
     for(let k=0;k<4;k++){const cx=4+(r()*(C-8)|0),cy=r()*R|0;for(const[a,b]of[[cx,cy],...nb4(cx,cy)])if(at(a,b).t===base&&r()<.75)at(a,b).t='dirt'}
   }
+  for(let gy=2;gy<R;gy+=5)for(let gx=2;gx<C;gx+=5){const x=clamp(Math.round(gx+(r()-.5)*3),0,C-1),y=clamp(Math.round(gy+(r()-.5)*3),0,R-1),g=at(x,y),bad=['sea','oil','lava','mnt','bed','sand','rock'];if(g&&!bad.includes(g.t)){g.t='rock';const n=nb4(x,y);if(n.length&&r()<.65){const[a,b]=n[Math.floor(r()*n.length)];const q=at(a,b);if(!bad.includes(q.t)){q.t='rock';q.h=g.h}}}}
   ORDER=[];for(let d=0;d<C+R-1;d++)for(let x=Math.max(0,d-R+1);x<=Math.min(C-1,d);x++)ORDER.push((d-x)*C+x);
   CEN=G.map((g,i)=>tc(i));BB=G.map((g,i)=>{const[cx,cy]=CEN[i];return[cx-TW/2-6,cy-TH/2-14,cx+TW/2+6,cy+TH/2+g.h*HZ+SLAB+2]});
   G.forEach((g,i)=>buildObjs(i));
 }
 function buildObjs(i){
   const g=G[i],r=mk(seed*31+i*977+TY.indexOf(g.t)*13),[cx,cy]=CEN[i],o=[];
-  const add=(k,m=.2)=>{const[px,py]=P(cx,cy,m+r()*(1-2*m),m+r()*(1-2*m));o.push({k,x:px,y:py+(WATERY.has(g.t)?2.5:0)})};
+  const add=(k,m=.2)=>{const[px,py]=P(cx,cy,m+r()*(1-2*m),m+r()*(1-2*m));o.push({k,x:px,y:py+(SUNK.has(g.t)?2.5:0)})};
   switch(g.t){
     case'forest':{const n=2+(r()<.6);for(let k=0;k<n;k++){const v=r()*3|0;add(regionId==='tropico'?(r()<.6?'palm'+v:'broad'+v):regionId==='polar'?'spine'+v:(r()<.6?'pine'+v:'broad'+v))}if(r()<.6)add('bush'+(r()*2|0));break}
     case'flower':{const n=1+(r()<.5);for(let k=0;k<n;k++)add('fbush'+(r()*3|0),.15);break}
@@ -339,11 +351,11 @@ function buildObjs(i){
   }
   o.sort((a,b)=>a.y-b.y);g.o=o;
 }
-function setType(i,t){const g=G[i],was=WATERY.has(g.t);g.t=t;known.add(t);buildObjs(i);dirtyT.add(i);if(was!==WATERY.has(t)){const x=i%C,y=i/C|0;for(const[a,b]of nb4(x,y))dirtyT.add(b*C+a)}dirty=true}
+function setType(i,t){const g=G[i],was=WATERY.has(g.t);g.t=t;known.add(t);if(GREEN.has(t))g.gt=performance.now();buildObjs(i);dirtyT.add(i);if(was!==WATERY.has(t)){const x=i%C,y=i/C|0;for(const[a,b]of nb4(x,y))dirtyT.add(b*C+a)}dirty=true}
 
 /* ================= suelo (caché) ================= */
 const FCOL={earth:['#7c5c3f','#5f4530'],tox:['#6e5255','#553f42'],ash:['#544d4a','#413b39'],rock:['#857e76','#655f58'],sand:['#c6aa76','#a68c5e'],water:['#2d6491','#24547d'],ice:['#c5d9e6','#9fbdd0'],lava:['#3b302c','#2a2220']};
-const TOPC0={tox:['#776061','#6e5859'],ash:['#56504d','#4d4845'],dirt:['#937252','#8a6a4c'],grass:['#84bb53','#7cb24d'],forest:['#5c9540','#558c3b'],flower:['#84bb53','#7cb24d'],wet:['#559cb2','#4b90a8'],water:['#4192c4','#3985b9'],sea:['#3274a9','#2d6b9f'],sand:['#ddc692','#d6bf8a'],mang:['#549db0','#4b92a5'],rock:['#8b8172','#83796b'],mnt:['#958d84','#8b837a'],ice:['#e8f1f6','#d9e7ef'],lava:['#3a2b27','#33251f'],oil:['#2a3a48','#25333f']};
+const TOPC0={tox:['#776061','#6e5859'],ash:['#56504d','#4d4845'],dirt:['#937252','#8a6a4c'],grass:['#84bb53','#7cb24d'],forest:['#5c9540','#558c3b'],flower:['#84bb53','#7cb24d'],wet:['#559cb2','#4b90a8'],water:['#4192c4','#3985b9'],sea:['#3274a9','#2d6b9f'],sand:['#ddc692','#d6bf8a'],mang:['#549db0','#4b92a5'],rock:['#8b8172','#83796b'],mnt:['#958d84','#8b837a'],ice:['#e8f1f6','#d9e7ef'],lava:['#3a2b27','#33251f'],oil:['#2a3a48','#25333f'],bed:['#7a5f45','#715740']};
 let TOPC={...TOPC0};
 function faceKind(t){return t==='mnt'||t==='rock'?'rock':t==='sand'?'sand':t==='tox'?'tox':t==='ash'?'ash':t==='sea'||t==='oil'?'water':t==='ice'?'ice':t==='lava'?'lava':'earth'}
 function face(c,L,cx,cy,d,g,n,r){
@@ -371,7 +383,7 @@ function fern(c,x,y,r){for(let k=0;k<6;k++){const a=-2.7+k*.4+(r()-.5)*.2,l=4+r(
 function lily(c,x,y,s){c.fillStyle='#3e8a3c';c.beginPath();c.moveTo(x,y);c.ellipse(x,y,s*1.4,s*.75,0,.5,5.9);c.closePath();c.fill();E(c,x-s*.3,y-s*.15,s*.6,s*.3,'#5aa64c')}
 function boulder(c,x,y,s,dark){E(c,x+s*.35,y+s*.2,s*1.15,s*.5,'rgba(0,0,0,.28)');E(c,x,y-s*.3,s,s*.72,dark?'#4d4440':'#8d857a');E(c,x+s*.35,y-s*.15,s*.6,s*.5,dark?'#352e2b':'#6c655c');E(c,x-s*.3,y-s*.6,s*.55,s*.35,dark?'#6b605a':'#b8b0a3')}
 function drawTop(c,t,cx,cy,r,h){
-  const wet=WATERY.has(t),cy2=cy+(wet?2.5:0);
+  const wet=SUNK.has(t),cy2=cy+(wet?2.5:0);
   topFill(c,t,cx,wet?cy2:cy,1);
   c.save();dia(c,cx,wet?cy2:cy,1);c.clip();
   switch(t){
@@ -394,6 +406,7 @@ function drawTop(c,t,cx,cy,r,h){
     case'water':c.strokeStyle='rgba(165,218,247,.45)';c.lineWidth=.7;for(let k=0;k<5;k++){const[x,y]=rp(r,cx,cy2,.15);c.beginPath();c.moveTo(x-3,y);c.quadraticCurveTo(x,y-1,x+3,y);c.stroke()}for(let k=0;k<3;k++){const[x,y]=rp(r,cx,cy2,.2);E(c,x,y,5,2,'rgba(20,60,100,.16)')}break;
     case'sea':c.strokeStyle='rgba(150,200,240,.35)';c.lineWidth=.8;for(let k=0;k<6;k++){const[x,y]=rp(r,cx,cy2,.1);c.beginPath();c.moveTo(x-4,y);c.quadraticCurveTo(x,y-1.5,x+4,y);c.stroke()}if(regionId==='polar'&&r()<.25){const[x,y]=rp(r,cx,cy2,.25);poly(c,[[x-5,y],[x-2,y-2.5],[x+4,y-2],[x+6,y+.5],[x,y+2]],'#eef5fa')}break;
     case'mang':for(let k=0;k<3;k++){const[x,y]=rp(r,cx,cy2,.15);E(c,x,y,6,2.5,'#cdb684')}for(let k=0;k<3;k++){const[x,y]=rp(r,cx,cy2,.15);lily(c,x,y,1.3)}break;
+    case'bed':cracks(c,r,cx,cy2,'#5a4230',5);for(let k=0;k<8;k++){const[x,y]=rp(r,cx,cy2,.12);E(c,x+.3,y+.4,1.2,.6,'rgba(0,0,0,.25)');E(c,x,y,1.2,.7,r()<.5?'#a8957e':'#8e7b66')}break;
     case'rock':cracks(c,r,cx,cy,'#6c6357',3);break;
     case'mnt':c.strokeStyle='rgba(60,55,50,.35)';c.lineWidth=.8;for(let k=0;k<7;k++){const[x,y]=rp(r,cx,cy,.1);c.beginPath();c.moveTo(x,y);c.lineTo(x+3+r()*4,y+1+r()*2);c.stroke()}
       if(regionId==='volcan'){c.fillStyle='rgba(40,30,28,.55)';dia(c,cx,cy);c.fill();for(let k=0;k<6;k++){const[x,y]=rp(r,cx,cy);Ci(c,x,y,.6,'#6b605a')}}
@@ -408,8 +421,8 @@ function drawTileC(c,i){
   if(dl>0)face(c,true,cx,cy,dl,g,nl,r);
   if(dr>0)face(c,false,cx,cy,dr,g,nr,r);
   drawTop(c,g.t,cx,cy,r,g.h);
-  if(WATERY.has(g.t)){const ED=[[-1,0,[0,0],[0,1]],[0,-1,[0,0],[1,0]],[1,0,[1,0],[1,1]],[0,1,[0,1],[1,1]]];
-    for(const[dx,dy,A,B]of ED){const q=at(x+dx,y+dy);if(q&&WATERY.has(q.t))continue;const[a1,b1]=P(cx,cy,A[0],A[1]),[a2,b2]=P(cx,cy,B[0],B[1]);
+  if(SUNK.has(g.t)){const ED=[[-1,0,[0,0],[0,1]],[0,-1,[0,0],[1,0]],[1,0,[1,0],[1,1]],[0,1,[0,1],[1,1]]];
+    for(const[dx,dy,A,B]of ED){const q=at(x+dx,y+dy);if(q&&SUNK.has(q.t))continue;const[a1,b1]=P(cx,cy,A[0],A[1]),[a2,b2]=P(cx,cy,B[0],B[1]);
       if(dx<0||dy<0){poly(c,[[a1,b1],[a2,b2],[a2,b2+2.5],[a1,b1+2.5]],'#5e4632');ln(c,a1,b1+2.6,a2,b2+2.6,'rgba(220,240,255,.55)',.8)}else ln(c,a1,b1+2.5,a2,b2+2.5,'rgba(30,50,70,.35)',.8)}}
   if(g.t==='rock'||(g.t==='mnt'&&g.h<5&&!(regionId==='polar'))){const n=g.t==='rock'?3+(r()*2|0):1+(r()*2|0),pts=[];for(let k=0;k<n;k++)pts.push(rp(r,cx,cy,.24));pts.sort((a,b)=>a[1]-b[1]);pts.forEach(([px,py])=>boulder(c,px,py,2.5+r()*3,regionId==='volcan'))}
   if(g.t==='grass'||g.t==='forest'||g.t==='flower')for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const n=at(x+dx,y+dy);if(n&&WATERY.has(n.t))for(let k=0;k<2;k++){const s=.15+r()*.7,u=dx?(dx>0?.86:.14):s,v=dy?(dy>0?.86:.14):s;const[px,py]=P(cx,cy,u,v);fern(c,px,py+1,r)}}
@@ -424,17 +437,18 @@ function isoBox(c,x,y,s,h,ct,cl,cr){poly(c,[[x-s,y-h],[x,y-h+s/2],[x,y+s/2],[x-s
 function pad(c,x,y,rx,col){E(c,x,y+1.5,rx,rx/2,'#4f4a44');E(c,x,y,rx,rx/2,col||'#9b968c')}
 function statusLight(c,x,y,t,pw){Ci(c,x,y,1,pw?'#7fe07a':(Math.sin(t*6)>0?'#ff5a40':'#6a2a20'))}
 function sprayAng(t,i){return t*1.5+i*1.7}
-const TOPY={tur:50,geo:16,dep:16,asp:22,sol:16,nub:30,fri:8,obs:14};
+const TOPY={tur:50,geo:16,dep:16,asp:22,sol:16,nub:30,fri:8,obs:14,viv:16,col:12,hid:14,pum:14};
 function drawB(c,b,x,y,t,pw,alpha,i,lights){
   c.save();c.globalAlpha=alpha;i=i||0;
   if(b==='tur'){
     for(const[dx,dy,rx,ry]of[[-6,1,5.5,3],[5,2,5,2.8],[0,4.5,6,3],[-1,-1,4.5,2.4]]){E(c,x+dx+1,y+dy+1.2,rx,ry,'rgba(0,0,0,.25)');E(c,x+dx,y+dy,rx,ry*.95,'#8e877c');E(c,x+dx-1,y+dy-.9,rx*.6,ry*.5,'#b9b2a6')}
+    if(lights&&SHOWCAP)for(let k=0;k<6;k++)Ci(c,x-7.5+k*3,y+7.5,.95,k<(LOAD[i]||0)?'#9fe07a':'rgba(0,0,0,.45)');
     const top=y-54;poly(c,[[x-2.3,y],[x-1.1,top],[x+1.1,top],[x+2.3,y]],'#efebe3');poly(c,[[x+.2,y],[x+.2,top],[x+1.1,top],[x+2.3,y]],'#cfc9be');
     c.fillStyle='#e7e2d8';c.fillRect(x-2.6,top-2.3,6.2,4.2);c.fillStyle='#c4bdb1';c.fillRect(x+1.6,top-2.3,2,4.2);
     const a0=t*2.6+i;for(let k=0;k<3;k++){const a=a0+k*2.0944,dx=Math.cos(a),dy=Math.sin(a),px=-dy,py=dx;poly(c,[[x+px*1.2,top+py*1.2],[x+dx*24,top+dy*24],[x-px*.6,top-py*.6]],'#f8f6f1');ln(c,x,top,x+dx*24,top+dy*24,'rgba(150,140,128,.5)',.3)}
     Ci(c,x,top,1.7,'#d6cfc3');if(lights)lights.push([x,top-2.4,(Math.sin(t*3+i)>0)?1:.25,'255,60,40',5]);
   }else if(b==='geo'){
-    E(c,x,y+1.5,15,7,'#221b18');E(c,x,y,15,7,'#3d322d');E(c,x,y,11,5.5,'rgba(255,120,40,'+(.3+.2*Math.sin(t*3)).toFixed(2)+')');
+    E(c,x,y+1.5,15,7,'#221b18');E(c,x,y,15,7,'#3d322d');if(lights&&SHOWCAP)for(let k=0;k<6;k++)Ci(c,x-7.5+k*3,y+8.5,.95,k<(LOAD[i]||0)?'#9fe07a':'rgba(0,0,0,.45)');E(c,x,y,11,5.5,'rgba(255,120,40,'+(.3+.2*Math.sin(t*3)).toFixed(2)+')');
     const top=y-17,gr=c.createLinearGradient(x-9,0,x+9,0);gr.addColorStop(0,'#ece6da');gr.addColorStop(.45,'#d9d3c7');gr.addColorStop(1,'#9f998d');c.fillStyle=gr;
     c.beginPath();c.moveTo(x-9,y-1);c.quadraticCurveTo(x-4.6,y-9,x-6.5,top);c.lineTo(x+6.5,top);c.quadraticCurveTo(x+4.6,y-9,x+9,y-1);c.ellipse(x,y-1,9,4.5,0,0,Math.PI);c.closePath();c.fill();
     c.strokeStyle='#c8643b';c.lineWidth=1.4;c.beginPath();c.ellipse(x,y-6,6.3,3,0,0,Math.PI);c.stroke();
@@ -478,6 +492,29 @@ function drawB(c,b,x,y,t,pw,alpha,i,lights){
     c.fillStyle='rgba(160,215,235,.85)';c.beginPath();c.ellipse(x,y-8,7.2,7.5,0,Math.PI,0);c.fill();c.strokeStyle='rgba(255,255,255,.8)';c.lineWidth=.8;c.beginPath();c.ellipse(x-1.5,y-9,4.5,5,0,Math.PI*1.1,Math.PI*1.5);c.stroke();
     ln(c,x+6.5,y-6,x+6.5,y-17,'#9a958c',.9);E(c,x+6.5,y-18,3.2*Math.abs(Math.cos(t*1.3+i))+.5,2.2,'#e8e4da');Ci(c,x+6.5,y-18,.6,'#c8643b');
     if(lights)lights.push([x,y-8,.6,'160,230,255',8]);
+  }else if(b==='viv'){
+    pad(c,x,y,13,'#8f8a7e');isoBox(c,x,y+2,10,3,'#5f4630','#8a6a44','#6b4f32');
+    for(const[dx,dy]of[[-5,-1],[0,-3],[5,-1],[0,1],[-2.5,0],[2.5,-2]]){ln(c,x+dx,y+dy,x+dx,y+dy-3,'#4f7a2e',.6);Ci(c,x+dx,y+dy-3.4,1.3,'#5fae48')}
+    isoBox(c,x,y-1,10,9,'rgba(215,240,245,.35)','rgba(175,215,228,.45)','rgba(140,190,208,.5)');
+    poly(c,[[x-10,y-10],[x,y-17],[x,y-15]],'rgba(230,248,252,.6)');poly(c,[[x,y-17],[x+10,y-10],[x,y-15]],'rgba(190,225,236,.65)');
+    c.strokeStyle='rgba(255,255,255,.75)';c.lineWidth=.5;c.beginPath();c.moveTo(x-10,y-10);c.lineTo(x,y-17);c.lineTo(x+10,y-10);c.moveTo(x,y-5);c.lineTo(x,y+4);c.moveTo(x,y-15);c.lineTo(x,y-5);c.stroke();
+    if(pw){const s=(t*.8)%1;Ci(c,x-4+s*8,y-6,.6,'rgba(200,235,255,.8)')}statusLight(c,x+8,y-3,t,pw);if(lights&&pw)lights.push([x,y-6,.7,'190,255,170',9]);
+  }else if(b==='col'){
+    E(c,x,y+1,8,3.5,'rgba(0,0,0,.25)');isoBox(c,x,y,5,5,'#f0c454','#d9a23a','#b0802a');isoBox(c,x,y-5,5,5,'#f6d06a','#e0ac44','#b98a30');isoBox(c,x,y-10,6,1.5,'#8a6a44','#6b4f32','#5a422a');
+    ln(c,x-3.5,y-1.2,x-1.5,y-.2,'#3a2a14',.9);
+    for(let k=0;k<5;k++){const a=t*(2+k*.3)+k*1.3,r=6+k*1.4;Ci(c,x+Math.cos(a)*r,y-8+Math.sin(a)*r*.45+Math.sin(t*9+k)*.8,.55,'#2b2410');Ci(c,x+Math.cos(a)*r,y-8.5+Math.sin(a)*r*.45,.45,'#f2c230')}
+  }else if(b==='hid'){
+    pad(c,x,y,11,'#7f9a8f');cyl(c,x-1,y+1,6,3,13,'rgba(120,200,170,.8)','rgba(70,150,125,.85)','rgba(170,230,205,.9)');
+    for(let k=0;k<5;k++)ln(c,x-4+k*1.8,y+1,x-4+k*1.8+(k%2-.5),y-8-(k%3),'#3f7f2f',.6);
+    c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=.6;c.beginPath();c.ellipse(x-1,y-12,6,3,0,0,6.28);c.stroke();
+    cyl(c,x+7,y+3,1.4,.7,10,'#d8d2c6','#9f998d','#c8643b');ln(c,x+7,y-7,x+3,y-9,'#9f998d',1);
+    if(pw)for(let k=0;k<3;k++){const s=(t*.6+k*.33)%1;Ci(c,x-3+k*2,y-1-s*11,.5,'rgba(230,255,245,'+(1-s).toFixed(2)+')')}
+    statusLight(c,x-6,y-2,t,pw);if(lights&&pw)lights.push([x-1,y-6,.8,'140,255,200',9]);
+  }else if(b==='pum'){
+    pad(c,x,y,11,'#8f8a82');isoBox(c,x-3,y+2,5,6,'#6fb3cf','#3b7f9c','#2d6680');
+    ln(c,x+3,y,x+3,y-14,'#9a958c',1.4);const a=Math.sin(t*(pw?2.4:0))*.35,bx=Math.cos(a)*9,by=Math.sin(a)*9;ln(c,x+3-bx,y-14-by,x+3+bx,y-14+by,'#c8643b',1.6);Ci(c,x+3,y-14,1.1,'#e6e1d7');ln(c,x+3+bx,y-14+by,x+3+bx*.95,y-4,'#6b6660',.6);
+    if(pw)for(let k=0;k<6;k++){const s=(t*1.4+k/6)%1,an=k*1.05;Ci(c,x+6+Math.cos(an)*s*6,y+2+Math.sin(an)*s*3-Math.sin(s*Math.PI)*3,.6,'rgba(170,215,255,'+(1-s).toFixed(2)+')')}
+    statusLight(c,x-6,y-4,t,pw);if(lights&&pw)lights.push([x-3,y-3,.7,'150,210,255',6]);
   }
   c.restore();
 }
@@ -508,6 +545,13 @@ function drawAnimalAt(c,k,x,y,t,f,walk,graze,ph,jump){
       ln(c,x-1.6*f,y-.6,x-4.6*f,y-.2+s*.3,'#6f8a3a',.7);E(c,x,y-.7,2,.65,'#6f8a3a');Ci(c,x+2*f,y-.8,.7,'#7e9a44');for(let j=0;j<3;j++)Ci(c,x-1+j*.8,y-.9,.22,'#d6c86a');break}
     case'turtle':{const s=walk?Math.sin(t*4+ph)*.4:0;E(c,x,y+.3,3.6,1.1,'rgba(0,0,0,.22)');E(c,x-2*f,y-.4+s,1.3,.5,'#8a9a5a');E(c,x+2*f,y-.4-s,1.3,.5,'#8a9a5a');Ci(c,x+3.6*f,y-1.1,.9,'#93a362');E(c,x,y-1.3,3.2,1.9,'#6b7a3a');E(c,x-.4,y-1.8,2.2,1.1,'#87994d');c.strokeStyle='rgba(50,60,30,.6)';c.lineWidth=.3;c.beginPath();c.moveTo(x-1.6,y-1.4);c.lineTo(x+1.6,y-1.4);c.moveTo(x,y-2.8);c.lineTo(x,y-.2);c.stroke();break}
     case'parrot':{const yy=y-16+Math.sin(t*3+ph)*1.5,fl=Math.sin(t*14+ph)*2.4;E(c,x,y+.2,2,.6,'rgba(0,0,0,.15)');ln(c,x-1.5*f,yy+.3,x-5.5*f,yy+2,'#2f6fd0',1);E(c,x,yy,2.4,1.2,'#d8402f');poly(c,[[x-.8*f,yy],[x-2.6*f,yy-2.6-fl],[x+1*f,yy-.6]],'#2f6fd0');poly(c,[[x-1.4*f,yy-1.2-fl*.6],[x-2.4*f,yy-2.4-fl*.9],[x-.6*f,yy-1]],'#f2c230');Ci(c,x+2.2*f,yy-.7,1,'#d8402f');Ci(c,x+2.5*f,yy-.9,.25,'#fff');E(c,x+3.2*f,yy-.4,.5,.4,'#e8e2c8');break}
+    case'beaver':{const b=Math.sin(t*2+ph)*.3;c.strokeStyle='rgba(255,255,255,.45)';c.lineWidth=.5;c.beginPath();c.moveTo(x-6*f,y-1.6);c.lineTo(x-1*f,y);c.lineTo(x-6*f,y+1.6);c.stroke();E(c,x,y-.6+b,3,1.3,'#7a5232');E(c,x-3.4*f,y-.2+b,1.8,.7,'#4f3420');Ci(c,x+2.6*f,y-1.4+b,1.2,'#8a5f3a');Ci(c,x+3.2*f,y-1.8+b,.3,'#111');Ci(c,x+2,y-2.4+b,.35,'#5a3c24');break}
+    case'frog':{const hop=walk?Math.abs(Math.sin(t*8+ph))*2.5:0,yy=y-hop;E(c,x,y+.2,1.6,.5,'rgba(0,0,0,.2)');E(c,x,yy-1,1.8,1.1,'#5aa043');E(c,x-.6*f,yy-.6,1.2,.6,'#3f7f2f');Ci(c,x+.7*f,yy-2,.55,'#6cbf4f');Ci(c,x+1.3*f,yy-1.9,.55,'#6cbf4f');Ci(c,x+.75*f,yy-2.1,.22,'#111');Ci(c,x+1.35*f,yy-2,.22,'#111');break}
+    case'bear':{E(c,x,y+.4,7,2,'rgba(0,0,0,.3)');const p2=t*6+ph;c.strokeStyle='#4a321e';c.lineWidth=1.8;for(const lx of[-3.6,-2,2.4,3.8]){const s=walk?Math.sin(p2+lx)*1.2:0;c.beginPath();c.moveTo(x+lx*f,y-4);c.lineTo(x+lx*f+s,y);c.stroke()}E(c,x,y-6,6.2,3.4,'#6b4a2e');E(c,x+1*f,y-8,3,1.6,'#7d5838');const hx=x+6*f,hy=graze?y-3:y-7;Ci(c,hx,hy,2.2,'#6b4a2e');E(c,hx+1.6*f,hy+.6,1.1,.8,'#a07a52');Ci(c,hx+2.4*f,hy+.3,.4,'#111');Ci(c,hx-1*f,hy-1.9,.8,'#5a3c24');Ci(c,hx+.8*f,hy-2,.8,'#5a3c24');Ci(c,hx+1*f,hy-.6,.3,'#111');break}
+    case'flamingo':{E(c,x,y+.3,2.6,.8,'rgba(0,0,0,.18)');c.strokeStyle='#e88a9a';c.lineWidth=.55;const s=walk?Math.sin(t*5+ph):0;c.beginPath();c.moveTo(x,y-6);c.lineTo(x+s*.8,y);c.stroke();c.beginPath();if(walk){c.moveTo(x+.5,y-6);c.lineTo(x+.5-s*.8,y)}else{c.moveTo(x+.4,y-6);c.lineTo(x+1.6,y-4.4);c.lineTo(x+.6,y-3.6)}c.stroke();E(c,x,y-7,2.8,1.6,'#f39aae');E(c,x-1.2*f,y-7.4,1.7,.8,'#e5788f');c.strokeStyle='#f6a6b8';c.lineWidth=1;c.beginPath();c.moveTo(x+2*f,y-7.6);c.quadraticCurveTo(x+4*f,y-10,x+2.4*f,y-12);c.quadraticCurveTo(x+1.6*f,y-13.6,x+3*f,y-13.8);c.stroke();Ci(c,x+3*f,y-13.8,.8,'#f6a6b8');ln(c,x+3.6*f,y-13.6,x+4.6*f,y-12.6,'#222',.6);break}
+    case'manta':{const fl=Math.sin(t*3+ph)*1.2,ga=c.globalAlpha;c.globalAlpha=ga*.6;poly(c,[[x+4*f,y],[x,y-2-fl],[x-3*f,y],[x,y+2+fl]],'#22384a');ln(c,x-3*f,y,x-7*f,y+.4,'#22384a',.4);c.globalAlpha=ga;break}
+    case'wolf':{const s=walk?Math.sin(t*9+ph):0;E(c,x,y+.3,5,1.3,'rgba(0,0,0,.24)');c.strokeStyle='#5d5f63';c.lineWidth=.9;for(const lx of[-2.6,-1.4,2,3]){c.beginPath();c.moveTo(x+lx*f,y-3.4);c.lineTo(x+lx*f+s,y);c.stroke()}c.strokeStyle='#7d7f84';c.lineWidth=1.6;c.beginPath();c.moveTo(x-3.6*f,y-4.6);c.quadraticCurveTo(x-6*f,y-4,x-6.4*f,y-2);c.stroke();E(c,x,y-4.4,4,1.8,'#8d8f94');E(c,x,y-3.6,3,.8,'#c9cacd');Ci(c,x+4*f,y-5.8,1.4,'#8d8f94');E(c,x+5.4*f,y-5.4,1,.6,'#a5a7ab');poly(c,[[x+3.2*f,y-6.8],[x+3.4*f,y-8.8],[x+4.2*f,y-7]],'#7d7f84');poly(c,[[x+4.4*f,y-6.9],[x+4.9*f,y-8.7],[x+5.2*f,y-6.6]],'#7d7f84');Ci(c,x+4.6*f,y-6,.3,'#222');break}
+    case'whale':{if(jump>0){const s=1-jump,up=Math.max(.05,Math.sin(s*Math.PI));E(c,x,y+.5,9*up+1,2.2*up,'rgba(255,255,255,.4)');c.fillStyle='#34495c';c.beginPath();c.ellipse(x,y,8,3.2*up,0,Math.PI,0);c.fill();E(c,x-1,y-2.2*up,4,.8*up,'#4a6176');if(s>.25&&s<.75)for(let k=0;k<7;k++){const a=-Math.PI/2+(k-3)*.18,l=6+Math.sin(t*20+k)*1.5;Ci(c,x+2*f+Math.cos(a)*l*.6,y-3*up+Math.sin(a)*l,.6,'rgba(235,245,255,.85)')}}else{const ga=c.globalAlpha;c.globalAlpha=ga*.25;E(c,x,y,8,2.6,'#1b2c3b');c.globalAlpha=ga}break}
     case'bee':{const yy=y-6+Math.sin(t*7+ph)*1.5,xx=x+Math.sin(t*5+ph*2)*2;Ci(c,xx,yy-.8,.6,'rgba(255,255,255,.75)');E(c,xx,yy,.9,.6,'#f2c230');ln(c,xx,yy-.6,xx,yy+.6,'#222',.35);break}
     case'butterfly':{const yy=y-8+Math.sin(t*2+ph)*2,fl=Math.abs(Math.sin(t*14+ph)),col=['#f4a259','#ffffff','#7fb7ff','#f6d55c'][Math.floor(ph)%4];E(c,x-1.1*fl,yy,1.3*fl+.2,1,col);E(c,x+1.1*fl,yy,1.3*fl+.2,1,col);ln(c,x,yy-1,x,yy+1,'#333',.35);break}
     case'fish':{if(jump>0){const s=1-jump,hh=Math.sin(s*Math.PI)*7;E(c,x,y,3*(1-Math.abs(.5-s)),1,'rgba(255,255,255,.35)');E(c,x+(s-.5)*6*f,y-hh,1.8,.8,'#f39a4a');poly(c,[[x+(s-.5)*6*f-1.6*f,y-hh],[x+(s-.5)*6*f-2.8*f,y-hh-1],[x+(s-.5)*6*f-2.8*f,y-hh+1]],'#f39a4a')}else{c.strokeStyle='rgba(255,255,255,'+(.25+.2*Math.sin(t*2+ph)).toFixed(2)+')';c.lineWidth=.4;c.beginPath();c.ellipse(x,y,2.5,1,0,0,6.28);c.stroke()}break}
@@ -517,13 +561,13 @@ function wpos(a){const g=G[clamp(a.y|0,0,R-1)*C+clamp(a.x|0,0,C-1)];return[OX+(a
 function habTiles(hab){const o=[];G.forEach((g,i)=>{if(hab.includes(g.t)&&!g.b)o.push(i)});return o}
 function newTarget(a){const hab=HAB[a.k],x0=a.x|0,y0=a.y|0;for(let k=0;k<12;k++){const x=x0+Math.round((Math.random()-.5)*6),y=y0+Math.round((Math.random()-.5)*6),g=at(x,y);if(g&&hab.includes(g.t)){a.tx=x+.25+Math.random()*.5;a.ty=y+.25+Math.random()*.5;return}}const L=habTiles(hab);if(L.length){const i=pick(L);a.tx=i%C+.5;a.ty=(i/C|0)+.5}}
 function fauna(silent){
-  const s=stats();
+  const s=stats();s.reindeer=anim.filter(a=>a.k==='reindeer').length;
   for(const k of REG.sp){const want=WANT[k](s);let n=anim.filter(a=>a.k===k).length;const L=n<want?habTiles(HAB[k]):[];while(n<want&&L.length){const i=pick(L),a={k,x:i%C+.5,y:(i/C|0)+.5,tx:0,ty:0,f:1,walk:false,graze:false,idle:Math.random()*3,ph:Math.random()*10,jump:0};newTarget(a);anim.push(a);n++;discover(k,silent)}}
   anim=anim.filter(a=>{const g=at(a.x|0,a.y|0);return g&&HAB[a.k].includes(g.t)||a.walk});
 }
 function discover(k,silent){if(seen.has(k))return;seen.add(k);dirty=true;if(!silent){say('Nueva especie: '+SPEC[k].n+(phase<3?'. Regístrala en la fase 3':''));SFX.found()}}
 function moveAnimals(dt){for(const a of anim){
-  if(a.k==='fish'){if(a.jump>0)a.jump=Math.max(0,a.jump-dt);else if(Math.random()<dt*.12)a.jump=1}
+  if(a.k==='fish'||a.k==='whale'){const w=a.k==='whale';if(a.jump>0)a.jump=Math.max(0,a.jump-dt*(w?.35:1));else if(Math.random()<dt*(w?.08:.12))a.jump=1}
   if(a.idle>0){a.idle-=dt;a.walk=false;continue}
   const dx=a.tx-a.x,dy=a.ty-a.y,d=Math.hypot(dx,dy);
   if(d<.04){a.walk=false;a.idle=1+Math.random()*(a.k==='deer'||a.k==='reindeer'||a.k==='goat'?6:a.k==='heron'||a.k==='seal'?5:2.5);a.graze=(a.k==='deer'||a.k==='reindeer'||a.k==='goat')&&Math.random()<.7;newTarget(a);continue}
@@ -571,51 +615,63 @@ function ambience(now,st,night){
 function setMute(m){muted=m;ls.set('renuevo-mute',m?'1':'0');$('snd').innerHTML=m?SND_OFF:SND_ON;if(master)master.gain.setTargetAtTime(m?0:1,AC.currentTime,.05)}
 
 /* ================= clima y reglas ================= */
-const rad=i=>G[i].b==='geo'||G[i].t==='mnt'?3:2;
-function computePower(){POW=G.map(()=>false);SRC=G.map(()=>-1);const best=G.map(()=>1e9);
-  G.forEach((g,i)=>{if(g.b!=='tur'&&g.b!=='geo')return;const r=rad(i),x0=i%C,y0=i/C|0;for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){const q=at(x,y);if(!q)continue;const j=q.i,d=Math.hypot(x-x0,y-y0);POW[j]=true;if(d<best[j]){best[j]=d;SRC[j]=i}}})}
+const rad=i=>G[i].b==='geo'?4:G[i].t==='mnt'?4:3;
+const cheb=(s,x,y)=>Math.max(Math.abs(s%C-x),Math.abs((s/C|0)-y));
+function computePower(){POW=G.map(()=>false);SRC=G.map(()=>-1);COV=G.map(()=>false);LOAD=G.map(()=>0);const srcs=[];
+  G.forEach((g,i)=>{if(g.b!=='tur'&&g.b!=='geo')return;srcs.push(i);const r=rad(i),x0=i%C,y0=i/C|0;for(let y=y0-r;y<=y0+r;y++)for(let x=x0-r;x<=x0+r;x++){const q=at(x,y);if(q)COV[q.i]=true}});
+  G.forEach((g,i)=>{if(!NEEDPOW.has(g.b))return;const x=i%C,y=i/C|0,c=srcs.filter(s=>cheb(s,x,y)<=rad(s)&&LOAD[s]<6).sort((a,b)=>Math.hypot(a%C-x,(a/C|0)-y)-Math.hypot(b%C-x,(b/C|0)-y));if(c.length){SRC[i]=c[0];LOAD[c[0]]++;POW[i]=true}})}
+function spare(i){const x=i%C,y=i/C|0;return G.some((g,s)=>(g.b==='tur'||g.b==='geo')&&cheb(s,x,y)<=rad(s)&&LOAD[s]<6)}
+function tooClose(x,y,id){const r0=id==='geo'?4:at(x,y).t==='mnt'?4:3;return G.some((g,s)=>(g.b==='tur'||g.b==='geo')&&cheb(s,x,y)<=Math.max(rad(s),r0))}
 function climate(s){let nS=0,nH=0,nF=0,nG=0;G.forEach((g,i)=>{if(g.b==='geo')nG++;else if(POW[i]){if(g.b==='sol')nS++;else if(g.b==='nub')nH++;else if(g.b==='fri')nF++}});
   const gr=s.green/s.land;
   CL={T:REG.t0+3*nS-3*nF+1*nG-4*gr-1.5*wx.rain,H:clamp(REG.h0+10*nH+90*(s.water+s.wet+s.mang)/s.land+18*gr+20*wx.rain,0,100),F:clamp(80*gr+25*(1-s.dirtyN/s.land),0,100)};return CL}
-const NEED={grass:{T:[0,99]},forest:{H:40,T:[4,28]},flower:{F:30,T:[8,32]},wet:{H:50},mang:{T:[10,99]}};
+const NEED={grass:{T:[0,99]},forest:{H:40,T:[4,28]},flower:{F:30,T:[4,32]},wet:{H:50},mang:{T:[10,99]}};
 function req(t){const n=NEED[t];if(!n)return'';if(n.T&&CL.T<n.T[0])return`Demasiado frío (mín. ${n.T[0]} °C)`;if(n.T&&CL.T>n.T[1])return`Demasiado calor (máx. ${n.T[1]} °C)`;if(n.H&&CL.H<n.H)return`Falta humedad (mín. ${n.H}%)`;if(n.F&&CL.F<n.F)return`Suelo poco fértil (mín. ${n.F}%)`;return''}
 function needTxt(t){const n=NEED[t];if(!n)return'';const a=[];if(n.T)a.push(n.T[1]<99?`${n.T[0]}–${n.T[1]} °C`:`≥ ${n.T[0]} °C`);if(n.H)a.push(`humedad ≥ ${n.H}%`);if(n.F)a.push(`fertilidad ≥ ${n.F}%`);return a.join(' · ')}
+function powChk(g){return!COV[g.i]?'Necesita energía cerca':!spare(g.i)?'Las fuentes cercanas ya alimentan 6 edificios':''}
 function check(id,x,y){
   const g=at(x,y),t=T(id);if(!g)return'Fuera del mapa';
   if(id==='rec')return g.b?'':'No hay edificio aquí';
   if(phOf(t)>phase)return'Se desbloquea en la fase '+phOf(t);
   if(phase===3&&NOBUILD3.includes(id))return'Ya no se construye: registra la fauna y recicla';
-  if(g.b)return'Ya hay un edificio';
   if(leaves<t.c)return'Te faltan hojas';
-  if(id==='geo')return g.t==='lava'?'':'Solo sobre lava';
-  if(t.b){if(WATERY.has(g.t))return'No sobre el agua';if(g.t==='lava')return'Solo la planta geotérmica va sobre lava';if(id==='tur')return'';if(g.t==='mnt')return'Solo turbinas en la montaña';if(NEEDPOW.has(id)&&!POW[g.i])return'Necesita energía cerca';return''}
+  if(id==='hid'){if(g.b!=='asp')return'Se construye sobre un aspersor';let near=false;for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const q=at(x+dx,y+dy);if(q&&(q.t==='water'||q.t==='wet'||q.t==='sea'))near=true}return near?req('wet'):'Necesita agua a 3 casillas'}
+  if(g.b)return'Ya hay un edificio';
+  if(id==='tur'){if(g.t!=='rock'&&g.t!=='mnt')return'Las turbinas van sobre roca o montaña';return tooClose(x,y,'tur')?'Muy cerca de otra fuente de energía':''}
+  if(id==='geo'){if(g.t!=='lava')return'Solo sobre lava';return tooClose(x,y,'geo')?'Muy cerca de otra fuente de energía':''}
+  if(id==='pum')return g.t!=='bed'?'Solo sobre un cauce seco':powChk(g);
+  if(id==='viv'){if(g.t!=='grass')return'Solo sobre pasto';return powChk(g)||req('forest')}
+  if(id==='col'){if(g.t!=='forest')return'Solo sobre un bosque';return req('flower')}
+  if(t.b){if(WATERY.has(g.t)||g.t==='bed')return'No sobre el agua ni un cauce';if(g.t==='lava')return'Solo la planta geotérmica va sobre lava';if(g.t==='mnt')return'Aquí solo caben turbinas';return NEEDPOW.has(id)?powChk(g):''}
   if(id==='can')return g.t==='dirt'||g.t==='grass'?'':'Solo en tierra limpia o pasto';
   if(id==='man'){if(g.t!=='sand')return'Solo sobre arena';if(!touches(x,y,['sea']))return'Debe tocar el mar';return req('mang')}
-  if(g.t!=='grass')return'Solo sobre pasto';
-  if(id==='hum'){if(!touches(x,y,['water','wet','sea']))return'Debe tocar el agua';return req('wet')}
-  return req(id==='bos'?'forest':'flower');
+  return'';
 }
 function apply(id,x,y){
   const e=check(id,x,y);if(e){say(e);SFX.err();return false}
   const g=at(x,y),[cx,cy]=CEN[g.i];
-  if(id==='rec'){const v=Math.floor(T(g.b).c/2);leaves+=v;pop(cx,cy,'+'+v);g.b=null;SFX.rec();burst(cx,cy,'#d9cfbd',10)}
+  if(id==='rec'){const v=Math.floor(T(g.b).c/2);leaves+=v;pop(cx,cy,'+'+v);lifts.push({b:g.b,x:cx,y:cy,t0:performance.now(),i:g.i});g.b=null;SFX.rec();burst(cx,cy,'#d9cfbd',10)}
   else{leaves-=T(id).c;
-    if(T(id).b){g.b=id;SFX.place();burst(cx,cy,'#c9b79a',12)}
-    else{setType(g.i,{can:'water',bos:'forest',hum:'wet',flo:'flower',man:'mang'}[id]);id==='can'?SFX.water():SFX.seed();burst(cx,cy,id==='can'?'#9fd0ee':'#a8e070',10)}}
+    if(T(id).b){g.b=id;g.bt=performance.now();SFX.place();burst(cx,cy,'#c9b79a',12)}
+    else{setType(g.i,{can:'bed',man:'mang'}[id]);id==='can'?SFX.water():SFX.seed();burst(cx,cy,id==='can'?'#9fd0ee':'#a8e070',10)}}
   computePower();climate(stats());dirty=true;hud();return true;
 }
-function grow(i,t){if(req(t))return false;setType(i,t);leaves++;const[cx,cy]=CEN[i];pop(cx,cy,'+1');SFX.grow();return true}
-const SPR={water:['dirt',.35],forest:['grass',.14],flower:['grass',.11],wet:['grass',.06],mang:['sand',.09]};
+function grow(i,t){if(req(t))return false;setType(i,t);leaves++;const[cx,cy]=CEN[i];pop(cx,cy,'+1');for(let k=0;k<3;k++)parts.push({k:'spark',x:cx+(Math.random()-.5)*24,y:cy-1+(Math.random()-.5)*8,vy:-10-Math.random()*8,l:1});SFX.grow();return true}
+const SPR={water:['dirt',.35],forest:['grass',.08],flower:['grass',.13],wet:['grass',.06],mang:['sand',.09]};
 function tick(){
   if(!started||won||leaving)return;
   const s0=stats();climate(s0);const boost=1+wx.rain;
   for(let i=0;i<G.length;i++){const g=G[i];if(!g.b||g.b==='tur'||g.b==='geo')continue;const x=i%C,y=i/C|0;
     if(g.b==='obs'){for(const a of anim){if(scanned.has(a.k)||!REG.sp.includes(a.k))continue;if(Math.abs(a.x-(x+.5))<=3.5&&Math.abs(a.y-(y+.5))<=3.5){scanned.add(a.k);discover(a.k,true);const[cx,cy]=CEN[i],[ax,ay]=wpos(a);parts.push({k:'beam',x:cx,y:cy-14,x2:ax,y2:ay-5,l:1});say('Registrado: '+SPEC[a.k].n+` (${scanned.size}/3)`);SFX.scan();dirty=true;break}}continue}
+    if(g.b==='col'||g.b==='viv'||g.b==='hid'){if(g.b!=='col'&&!POW[i])continue;const tt=g.b==='col'?'flower':g.b==='viv'?'forest':'wet',rr=g.b==='col'?3:2;if(req(tt)||Math.random()>.6)continue;const c=[];for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){const h=at(x+dx,y+dy);if(h&&h.t==='grass'&&!h.b)c.push(h.i)}if(c.length)grow(pick(c),tt);continue}
+    if(g.b==='pum'){if(!POW[i])continue;const n=nb4(x,y).map(([a,b])=>at(a,b)).filter(q=>q.t==='bed'&&!q.b);if(n.length){const q=pick(n);setType(q.i,'water');const[cx,cy]=CEN[q.i];parts.push({k:'ring',x:cx,y:cy+2,l:1,col:'190,230,255'})}continue}
     if(!POW[i])continue;
-    if(g.b==='sol'){const c=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const h=at(x+dx,y+dy);if(h&&h.t==='ice')c.push(h.i)}if(c.length&&Math.random()<.7){const j=pick(c);setType(j,'dirt');const[cx,cy]=CEN[j];parts.push({k:'ring',x:cx,y:cy,l:1,col:'235,245,255'});SFX.melt()}continue}
+    if(g.b==='sol'){const c=[];for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){const h=at(x+dx,y+dy);if(h&&h.t==='ice')c.push(h.i)}if(c.length&&Math.random()<.7){const j=pick(c);setType(j,'dirt');const[cx,cy]=CEN[j];parts.push({k:'ring',x:cx,y:cy,l:1,col:'235,245,255'});SFX.melt()}continue}
     if(g.b!=='dep'&&g.b!=='asp')continue;
     const c=[];for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++){const h=at(x+dx,y+dy);if(h&&(g.b==='dep'?DIRTY.has(h.t):h.t==='dirt'))c.push(h.i)}
     if(c.length){const j=pick(c);if(g.b==='dep'){const was=G[j].t;setType(j,was==='oil'?'sea':'dirt');const[cx,cy]=CEN[j];parts.push({k:'ring',x:cx,y:cy,l:1,col:was==='ash'?'200,200,200':was==='oil'?'90,200,190':'200,160,220'});SFX.clean()}else if(!grow(j,'grass')&&performance.now()-lastWarn>20000){lastWarn=performance.now();say('Los aspersores no funcionan: '+req('grass').toLowerCase()+'. Usa espejos solares')}}}
+  {const fl=[];for(let i=0;i<G.length;i++){if(G[i].t!=='bed'||G[i].b)continue;const x=i%C,y=i/C|0;if(nb4(x,y).some(([a,b])=>{const q=at(a,b);return q.t==='water'||q.t==='sea'||q.t==='wet'}))fl.push(i)}fl.sort(()=>Math.random()-.5);for(const i of fl.slice(0,3)){setType(i,'water');const[cx,cy]=CEN[i];parts.push({k:'ring',x:cx,y:cy+2,l:1,col:'190,230,255'})}if(fl.length&&Math.random()<.15)SFX.water()}
+  if(CL.T>1)for(let k=0;k<20;k++){const i=Math.random()*G.length|0,g=G[i];if(g.t==='ice'&&Math.random()<Math.min(.5,CL.T*.03)&&nb4(i%C,i/C|0).some(([a,b])=>at(a,b).t!=='ice')){setType(i,'dirt');const[cx,cy]=CEN[i];parts.push({k:'ring',x:cx,y:cy,l:1,col:'235,245,255'})}}
   for(let k=0;k<30;k++){const i=Math.random()*G.length|0,g=G[i],s=SPR[g.t];
     if(!s){if(g.t==='grass'&&wx.rain>.3&&Math.random()<.04){const n=nb4(i%C,i/C|0).map(([a,b])=>at(a,b)).filter(q=>q.t==='dirt');if(n.length)grow(pick(n).i,'grass')}continue}
     if(Math.random()>s[1]*boost)continue;
@@ -658,6 +714,7 @@ function spawnFlock(){const y=OY+Math.random()*(C+R)*TH/2-60;flocks.push({x:OX-R
 /* ================= salida en nave ================= */
 const MAPC=()=>[OX+(C-R)*TW/4,OY+(C+R)*TH/4-HZ];
 function startLeaving(){if(leaving)return;leaving={t0:performance.now(),said:false};ghost=null;say('La nave viene a recogerte');SFX.ship()}
+function drawDrone(c,x,y,t){E(c,x+12,y+130,8,2.5,'rgba(0,0,0,.15)');for(const dx of[-7,7]){ln(c,x,y,x+dx,y-2,'#8d8a85',.8);E(c,x+dx,y-2.6,4.2,1.1,'rgba(225,225,225,.6)');ln(c,x+dx-4*Math.cos(t*40),y-2.6,x+dx+4*Math.cos(t*40),y-2.6,'rgba(90,90,90,.5)',.4)}E(c,x,y,6.5,2.8,'#ece6da');E(c,x,y+.9,6.5,1.3,'#c8643b');Ci(c,x+3,y-.6,.8,'#7fe07a')}
 function shipPos(now){const e=(now-leaving.t0)/1000,[mx,my]=MAPC(),A=[mx-760,my-460],B=[mx,my-120],D=[mx+820,my-520];
   const eo=k=>1-(1-k)**3,ei=k=>k*k*k,L=(p,q,k)=>[p[0]+(q[0]-p[0])*k,p[1]+(q[1]-p[1])*k];
   if(e<6)return{p:L(A,B,eo(e/6)),e};if(e<9)return{p:[B[0],B[1]+Math.sin(e*2)*3],e};return{p:L(B,D,ei(Math.min(1,(e-9)/6))),e}}
@@ -674,10 +731,10 @@ function drawShip(c,x,y,t,gy){
 
 /* ================= guardado ================= */
 const SKEY='renuevo-save-v3',PKEY='renuevo-prog';
-function snap(){return{v:3,ts:Date.now(),region:regionId,seed,leaves,phase,b3,gt:Math.round(gtime),seen:[...seen],sc:[...scanned],kn:[...known],ms:Math.round(playMs+performance.now()-runStart),t:G.map(g=>String.fromCharCode(97+TY.indexOf(g.t))).join(''),b:G.map(g=>BL.indexOf(g.b||'')).join('')}}
+function snap(){return{v:3,ts:Date.now(),region:regionId,seed,leaves,phase,b3,gt:Math.round(gtime),seen:[...seen],sc:[...scanned],kn:[...known],ms:Math.round(playMs+performance.now()-runStart),t:G.map(g=>String.fromCharCode(97+TY.indexOf(g.t))).join(''),b:G.map(g=>String.fromCharCode(97+BL.indexOf(g.b||''))).join('')}}
 function valid(s){return s&&s.v===3&&REGIONS[s.region]&&typeof s.t==='string'&&s.t.length===C*R}
 function setRegion(id){regionId=id;REG=REGIONS[id];TOPC={...TOPC0};if(REG.sea)TOPC.sea=REG.sea}
-function restore(s){setRegion(s.region);seed=s.seed;gen(seed);for(let i=0;i<G.length;i++){G[i].t=TY[s.t.charCodeAt(i)-97]||'tox';G[i].b=BL[+s.b[i]]||null;buildObjs(i)}
+function restore(s){setRegion(s.region);seed=s.seed;gen(seed);for(let i=0;i<G.length;i++){G[i].t=TY[s.t.charCodeAt(i)-97]||'tox';const ch=s.b[i];G[i].b=BL[/[0-9]/.test(ch)?+ch:ch.charCodeAt(0)-97]||null;buildObjs(i)}
   leaves=s.leaves;phase=s.phase;b3=s.b3||0;gtime=s.gt||DAY*.06;seen=new Set(s.seen||[]);scanned=new Set(s.sc||[]);known=new Set(s.kn||[]);G.forEach(g=>known.add(g.t));playMs=s.ms||0;runStart=performance.now();resetRun();tool=phase===3?'obs':'tur';computePower();redrawAll();buildToolbar();hud();fauna(true)}
 function resetRun(){anim=[];parts=[];flocks=[];won=false;leaving=null;ghost=null;wx={on:false,until:0,rain:0};$('win').hidden=true}
 function newGame(id){setRegion(id);seed=Date.now()&0xffffff;gen(seed);leaves=60;phase=1;b3=0;gtime=DAY*.06;seen=new Set();scanned=new Set();known=new Set(G.map(g=>g.t));playMs=0;runStart=performance.now();resetRun();tool=id==='volcan'?'geo':'tur';computePower();redrawAll();centerCam();buildToolbar();dirty=true;hud()}
@@ -714,19 +771,19 @@ function miniTile(c,t,r,h=1){poly(c,[[-TW/2,0],[0,TH/2],[0,TH/2+10],[-TW/2,10]],
 function drawIcon(cnv,id,big){
   const c=cnv.getContext('2d'),S=cnv.width;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,S,S);const k=S/112,r=mk(7);
   const sc=(s,x,y)=>c.setTransform(k*s,0,0,k*s,x*k,y*k),t=performance.now()/1000;
-  const B={tur:[1.15,58,100],geo:[2.4,56,86],dep:[2.5,58,82],asp:[2.2,54,84],sol:[2.3,56,90],nub:[1.75,56,100],fri:[2.5,56,80],obs:[2.6,56,86]};
+  const B={viv:[2.3,56,86],col:[3,56,84],hid:[2.4,56,84],pum:[2.3,54,86],tur:[1.15,58,100],geo:[2.4,56,86],dep:[2.5,58,82],asp:[2.2,54,84],sol:[2.3,56,90],nub:[1.75,56,100],fri:[2.5,56,80],obs:[2.6,56,86]};
   if(B[id]){sc(...B[id]);drawB(c,id,0,0,id==='tur'?(big?.4:t*.4):id==='asp'?.6:t,true,1,0)}
   else if(id==='rec'){c.setTransform(k,0,0,k,0,0);c.strokeStyle='#9fd36b';c.lineWidth=9;c.lineCap='round';c.beginPath();c.arc(56,58,26,-2.6,.9);c.stroke();c.beginPath();c.moveTo(80,74);c.lineTo(76,52);c.lineTo(96,62);c.closePath();c.fillStyle='#9fd36b';c.fill();c.strokeStyle='#e3eef0';c.beginPath();c.arc(56,58,26,.9+.6,3.6);c.stroke()}
-  else{const T2={can:'water',bos:'forest',hum:'wet',flo:'flower',man:'mang'}[id]||id;sc(1.45,56,60);miniTile(c,T2,r,T2==='mnt'?5:1);
+  else{const T2={can:'bed',man:'mang'}[id]||id;sc(1.45,56,60);miniTile(c,T2,r,T2==='mnt'?5:1);
     const fs=regionId==='tropico'?['palm1','broad0','palm0']:regionId==='polar'?['spine1','spine0','spine2']:['pine1','broad0','pine0'];
     const sp={bos:fs,forest:fs,hum:['reed0','reed1'],wet:['reed0'],flo:['fbush0','fbush1'],flower:['fbush0','fbush2'],man:['mang0'],mang:['mang0'],tox:['dead0'],ice:['dead1'],grass:['bush0']}[id]||[];
     const pos=[[-10,4],[8,2],[0,10]];sp.forEach((s,j)=>dspr(c,s,pos[j][0],pos[j][1]))}
 }
-function drawAnimIcon(cnv,k){const c=cnv.getContext('2d'),S=cnv.width,sc={bee:13,butterfly:10,rabbit:7,hare:7,fish:8,duck:7.5,goose:7,lizard:10,turtle:8,seal:7,fox:7,parrot:8}[k]||5,oy={bee:6,butterfly:8,fish:3,parrot:16}[k]||0;
+function drawAnimIcon(cnv,k){const c=cnv.getContext('2d'),S=cnv.width,sc={bee:13,butterfly:10,rabbit:7,hare:7,fish:8,duck:7.5,goose:7,lizard:10,turtle:8,seal:7,fox:7,parrot:8,beaver:7,frog:12,bear:4.5,flamingo:5.5,manta:8,wolf:6,whale:5}[k]||5,oy={bee:6,butterfly:8,fish:3,parrot:16}[k]||0;
   c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,S,S);const kk=S/112*sc;c.setTransform(kk,0,0,kk,S/2,oy?S*.5+oy*kk:S*.72);
-  if(k==='fish')drawAnimalAt(c,k,0,6,0,1,false,false,0,.5);else drawAnimalAt(c,k,0,0,k==='butterfly'?.06:k==='parrot'?.1:0,1,true,false,k==='butterfly'?0:1,0)}
-const TERR=[['tox','Suelo tóxico','Tierra envenenada con charcos de lodo verdoso. Solo un depurador puede limpiarla.'],['ash','Ceniza volcánica','Polvo gris con brasas. También se limpia con depuradores.'],['oil','Mancha de petróleo','Una capa irisada sobre el mar. Un depurador en la orilla la limpia.'],['ice','Permafrost','Suelo congelado. Los espejos solares lo derriten y dejan tierra.'],['lava','Lava','Roca fundida e intransitable. Una planta geotérmica encima da energía y calor.'],['dirt','Tierra limpia','Lista para regar. Los aspersores y los canales la reverdecen.'],['grass','Pasto','La base de todo. Cada casilla verde te da una hoja.'],['forest','Bosque','Crece solo hacia el pasto vecino. En el trópico es selva y en el norte, taiga.'],['flower','Prado de flores','Flores silvestres que se extienden y atraen polinizadores.'],['wet','Humedal','Agua somera con juncos y nenúfares; hogar de garzas.'],['water','Canal','Agua dulce que reverdece sus orillas y sube la humedad. En los desniveles forma cascadas.'],['sand','Arena','Playa costera. Aquí solo crece el manglar.'],['mang','Manglar','Árboles de raíces aéreas entre el mar y la tierra.'],['sea','Mar','El borde del mapa; la vida marina llega cuando la costa se recupera.'],['rock','Rocas','Afloramientos de piedra; puedes construir encima.'],['mnt','Montaña','Cumbres altas. Una turbina aquí alcanza 3 casillas.']];
-const BDESC={tur:'Genera electricidad para todo lo que esté a 2 casillas. Sobre una montaña el viento es más fuerte y alcanza 3. Los cables muestran qué edificio alimenta.',geo:'Se construye sobre lava. Aprovecha su calor para dar energía en radio 3 y sube la temperatura 1 °C.',dep:'Filtra el suelo contaminado, la ceniza y el petróleo del mar, casilla por casilla. Expulsa vapor mientras trabaja.',asp:'Un brazo giratorio rocía agua sobre la tierra limpia y la vuelve pasto, siempre que no esté helando. Cada casilla verde te devuelve una hoja.',can:'Excava un cauce. El agua reverdece la tierra de sus orillas, sube la humedad y, si cae por un desnivel, forma una cascada.',sol:'Un panel de espejos que concentra el sol: sube la temperatura 3 °C y derrite el permafrost a 2 casillas.',nub:'Siembra nubes en el aire seco: sube la humedad 10% y hace más probable la lluvia.',fri:'Un gran ventilador que enfría el aire 3 °C. Útil donde el calor no deja crecer la selva.',bos:'Siembra árboles sobre el pasto. Se expande solo y atrae a los herbívoros.',hum:'Convierte pasto junto al agua en pantano con juncos y nenúfares.',flo:'Siembra un prado de flores silvestres que se extiende con ayuda de los polinizadores.',man:'Árboles que crecen en la arena a la orilla del mar. Protegen la costa y atraen vida marina.',obs:'Una cúpula con antena que registra a los animales que pasan a 3 casillas. Necesitas 3 especies registradas para partir.',rec:'Desmonta un edificio y recupera la mitad de su costo. Al final no debe quedar ninguno.'};
+  if(k==='fish'||k==='whale')drawAnimalAt(c,k,0,6,0,1,false,false,0,.5);else drawAnimalAt(c,k,0,0,k==='butterfly'?.06:k==='parrot'?.1:0,1,true,false,k==='butterfly'?0:1,0)}
+const TERR=[['tox','Suelo tóxico','Tierra envenenada con charcos de lodo y una neblina malsana. Solo un depurador puede limpiarla.'],['ash','Ceniza volcánica','Polvo gris con brasas. También se limpia con depuradores.'],['oil','Mancha de petróleo','Una capa irisada sobre el mar. Un depurador en la orilla la limpia.'],['ice','Permafrost','Suelo congelado. Los espejos solares lo derriten y dejan tierra.'],['lava','Lava','Roca fundida e intransitable. Una planta geotérmica encima da energía y calor.'],['dirt','Tierra limpia','Lista para regar. Los aspersores y los ríos la reverdecen.'],['bed','Cauce seco','Lecho de un río sin agua. Una bomba lo llena, y también se llena solo si toca agua.'],['grass','Pasto','La base de todo. Cada casilla verde te da una hoja.'],['forest','Bosque','Lo siembra un vivero y luego se expande solo. En el trópico es selva y en el norte, taiga.'],['flower','Prado de flores','Lo crean las colmenas sobre el bosque; se extiende con ayuda de los polinizadores.'],['wet','Humedal','Lo crea un hidropónico cerca del agua. Hogar de ranas, garzas y flamencos.'],['water','Río','Agua dulce que reverdece sus orillas y sube la humedad. En los desniveles forma cascadas.'],['sand','Arena','Playa costera. Aquí solo crece el manglar.'],['mang','Manglar','Árboles de raíces aéreas entre el mar y la tierra.'],['sea','Mar','El borde del mapa; la vida marina llega cuando la costa se recupera.'],['rock','Rocas','Afloramientos de piedra: junto con las montañas, el único lugar donde caben turbinas.'],['mnt','Montaña','Cumbres altas. Una turbina aquí alcanza 4 casillas.']];
+const BDESC={tur:'Se construye sobre roca o montaña y alimenta hasta 6 edificios en radio 3 (radio 4 en montaña). No puede quedar dentro del alcance de otra fuente. Los puntos verdes de su base muestran cuántos edificios alimenta.',geo:'Se construye sobre lava. Alimenta hasta 6 edificios en radio 4 y sube la temperatura 1 °C.',dep:'Filtra el suelo contaminado, la ceniza y el petróleo del mar, casilla por casilla. Expulsa vapor mientras trabaja.',asp:'Un brazo giratorio rocía agua sobre la tierra limpia y la vuelve pasto, siempre que no esté helando. Cada casilla verde te devuelve una hoja.',pum:'Se coloca en un cauce seco y bombea agua del subsuelo: el río corre por todo el cauce conectado, reverdece sus orillas y forma cascadas en los desniveles.',can:'Excava un tramo de cauce. Si toca agua se llena solo; si no, conéctalo a un río o ponle una bomba.',sol:'Un panel de espejos que concentra el sol: sube la temperatura 3 °C y derrite el permafrost a 3 casillas. Con más de 1 °C, el hielo también se derrite poco a poco por sí solo.',nub:'Siembra nubes en el aire seco: sube la humedad 10% y hace más probable la lluvia.',fri:'Un gran ventilador que enfría el aire 3 °C. Útil donde el calor no deja crecer la selva.',viv:'Invernadero de plántulas: siembra árboles en el pasto a 2 casillas. Necesita energía y el clima del bosque.',col:'Panales sobre un bosque: las abejas llenan de flores el pasto a 3 casillas. No necesita energía.',hid:'Mejora un aspersor que esté a 3 casillas del agua: convierte el pasto cercano en humedal con juncos y nenúfares.',man:'Árboles que crecen en la arena a la orilla del mar. Protegen la costa y atraen vida marina.',obs:'Una cúpula con antena que registra a los animales que pasan a 3 casillas. Necesitas 3 especies registradas para partir.',rec:'Un dron baja, levanta el edificio y se lo lleva. Recuperas la mitad de su costo; al final no debe quedar ninguno.'};
 let bookTab='o';
 function openBook(tab){bookTab=tab||bookTab;$('book').hidden=false;renderBook()}
 function regTools(){return TOOLS.filter(inReg)}
@@ -796,6 +853,7 @@ for(let k=0;k<3;k++)clouds.push({x:Math.random()*WW,y:PAD+Math.random()*(WH-PAD*
 for(let k=0;k<170;k++)drops.push({x:Math.random(),y:Math.random(),s:.7+Math.random()*.6});
 let lastF=0,lastTick=0,fc=0,steamT=0;
 function frame(now){
+  SHOWCAP=started&&(NEEDPOW.has(tool)||tool==='tur'||tool==='geo');
   const dt=Math.min(.05,(now-lastF)/1000||0);lastF=now;const t=now/1000;
   if(started&&!won){if(!leaving)gtime+=dt;if(now-lastTick>(wx.rain>.3?260:350)){lastTick=now;tick()}if(++fc%40===0)fauna()}
   wx.rain+=((wx.on?1:0)-wx.rain)*Math.min(1,dt*.6);
@@ -813,26 +871,27 @@ function frame(now){
   const vis=i=>{const[cx,cy]=CEN[i];return cx>vx0&&cx<vx1&&cy>vy0&&cy<vy1};
   ctx.lineCap='round';
   for(let i=0;i<G.length;i++){const g=G[i];if(!vis(i))continue;const[cx,cy]=CEN[i];
-    if(WATERY.has(g.t)&&g.t!=='oil'){for(let k=0;k<2;k++){const u=(.15+((i*.37+k*.5+t*.035*(k+1))%1)*.7),v=.15+((i*.61+k*.3)%1)*.7,[px,py]=P(cx,cy+2.5,u,v),a=.3+.3*Math.sin(t*2+i+k*2);ln(ctx,px-2,py,px+2,py,'rgba(255,255,255,'+a.toFixed(2)+')',.7)}
-      if(g.t==='sea'){const x=i%C,y=i/C|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const q=at(x+dx,y+dy);if(!q||q.t==='sea'||q.t==='oil')continue;const e=dx===1?[[1,0],[1,1]]:dx===-1?[[0,0],[0,1]]:dy===1?[[0,1],[1,1]]:[[0,0],[1,0]];const w=.12+.05*Math.sin(t*1.6+i),[a1,b1]=P(cx,cy+2.5,e[0][0]*(1-w*2)+w,e[0][1]*(1-w*2)+w),[a2,b2]=P(cx,cy+2.5,e[1][0]*(1-w*2)+w,e[1][1]*(1-w*2)+w);ln(ctx,a1,b1,a2,b2,'rgba(240,250,255,'+(.4+.25*Math.sin(t*1.6+i)).toFixed(2)+')',1.6)}}}
+    if(WATERY.has(g.t)&&g.t!=='oil'){for(let k=0;k<2;k++){const u=(.15+((i*.37+k*.5+t*(g.t==='water'?.12:.035)*(k+1))%1)*.7),v=.15+((i*.61+k*.3)%1)*.7,[px,py]=P(cx,cy+2.5,u,v),a=.3+.3*Math.sin(t*2+i+k*2);ln(ctx,px-2,py,px+2,py,'rgba(255,255,255,'+a.toFixed(2)+')',.7)}
+      if(g.t==='sea'){const x=i%C,y=i/C|0;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const q=at(x+dx,y+dy);if(!q||q.t==='sea'||q.t==='oil')continue;const e=dx===1?[[1,0],[1,1]]:dx===-1?[[0,0],[0,1]]:dy===1?[[0,1],[1,1]]:[[0,0],[1,0]];const w=.12+.05*Math.sin(t*1.6+i)+.04*Math.sin(t*.3),[a1,b1]=P(cx,cy+2.5,e[0][0]*(1-w*2)+w,e[0][1]*(1-w*2)+w),[a2,b2]=P(cx,cy+2.5,e[1][0]*(1-w*2)+w,e[1][1]*(1-w*2)+w);ln(ctx,a1,b1,a2,b2,'rgba(240,250,255,'+(.4+.25*Math.sin(t*1.6+i)).toFixed(2)+')',1.6)}}}
     else if(g.t==='lava'){const a=.25+.18*Math.sin(t*2+i);const gr=ctx.createRadialGradient(cx,cy,0,cx,cy,TW*.45);gr.addColorStop(0,'rgba(255,120,30,'+a.toFixed(2)+')');gr.addColorStop(1,'rgba(255,120,30,0)');ctx.fillStyle=gr;dia(ctx,cx,cy);ctx.fill();if((t*1.3+i*.37)%3<.06)burst(cx,cy,'#ffb050',3)}
     else if(g.t==='ash'&&(i%3===0)){const[px,py]=P(cx,cy,.3+(i*.13)%.4,.3+(i*.29)%.4);Ci(ctx,px,py,1.2,'rgba(255,120,40,'+(.35+.35*Math.sin(t*1.7+i)).toFixed(2)+')')}
     else if(g.t==='tox'&&i%5===0){const s=(t*.6+i*.17)%1,[px,py]=P(cx,cy,.5,.45);if(s<.6)Ci(ctx,px+3,py,.6+s*1.2,'rgba(190,200,90,'+(0.6-s).toFixed(2)+')')}
     else if(g.t==='ice'&&i%4===0){const s=Math.sin(t*2.2+i*1.7);if(s>.85){const[px,py]=P(cx,cy,.3+(i*.21)%.4,.3+(i*.33)%.4);ln(ctx,px-2,py,px+2,py,'rgba(255,255,255,.9)',.6);ln(ctx,px,py-2,px,py+2,'rgba(255,255,255,.9)',.6)}}
   }
+  for(let i=0;i<G.length;i+=2){const g=G[i];if((g.t==='tox'||g.t==='ash')&&vis(i)){const[cx,cy]=CEN[i];ctx.globalAlpha=.55;dspr(ctx,g.t==='tox'?'fog':'fogA',cx+Math.sin(t*.25+i)*9,cy-3+Math.cos(t*.2+i*1.3)*3);ctx.globalAlpha=1}}
   for(const cl of clouds){cl.x+=dt*7;if(cl.x>WW+cl.s)cl.x=-cl.s;const g=ctx.createRadialGradient(cl.x,cl.y,0,cl.x,cl.y,cl.s);g.addColorStop(0,'rgba(0,0,0,.13)');g.addColorStop(1,'rgba(0,0,0,0)');ctx.save();ctx.translate(cl.x,cl.y);ctx.scale(1,.5);ctx.translate(-cl.x,-cl.y);ctx.fillStyle=g;ctx.fillRect(cl.x-cl.s,cl.y-cl.s,cl.s*2,cl.s*2);ctx.restore()}
   for(let i=0;i<G.length;i++){const g=G[i];if(g.b!=='asp'||!POW[i]||CL.T<0||!vis(i))continue;const[cx,cy]=CEN[i],a=sprayAng(t,i);
     for(const sg of[0,Math.PI]){const pts=[[cx,cy]];for(let s=-.35;s<=.36;s+=.07){const an=a+sg+s;pts.push([cx+(Math.cos(an)-Math.sin(an))*TW/2*2.3,cy+(Math.cos(an)+Math.sin(an))*TH/2*2.3])}
       const gr=ctx.createRadialGradient(cx,cy,0,cx,cy,TW*1.2);gr.addColorStop(0,'rgba(150,205,255,.34)');gr.addColorStop(1,'rgba(150,205,255,0)');poly(ctx,pts,gr)}}
   if(started&&!leaving){const tb=T(tool);
-    if(NEEDPOW.has(tool)){ctx.fillStyle='rgba(255,226,120,.13)';for(let i=0;i<G.length;i++)if(POW[i]&&vis(i)){const[cx,cy]=CEN[i];dia(ctx,cx,cy,.96);ctx.fill()}}
-    if(ghost&&tb.b){const[gx,gy]=ghost,r=tool==='obs'?3:(tool==='geo'||(tool==='tur'&&at(gx,gy).t==='mnt'))?3:2;ctx.fillStyle=tool==='obs'?'rgba(150,230,255,.2)':'rgba(255,240,170,.2)';for(let y=gy-r;y<=gy+r;y++)for(let x=gx-r;x<=gx+r;x++){const q=at(x,y);if(q){const[cx,cy]=CEN[q.i];dia(ctx,cx,cy,.94);ctx.fill()}}}}
+    if(NEEDPOW.has(tool)){ctx.fillStyle='rgba(255,226,120,.13)';for(let i=0;i<G.length;i++)if(COV[i]&&vis(i)){const[cx,cy]=CEN[i];dia(ctx,cx,cy,.96);ctx.fill()}}
+    if(ghost&&tb.b){const[gx,gy]=ghost,r=tool==='obs'?3:tool==='geo'?4:tool==='tur'?(at(gx,gy).t==='mnt'?4:3):2;ctx.fillStyle=tool==='obs'?'rgba(150,230,255,.2)':'rgba(255,240,170,.2)';for(let y=gy-r;y<=gy+r;y++)for(let x=gx-r;x<=gx+r;x++){const q=at(x,y);if(q){const[cx,cy]=CEN[q.i];dia(ctx,cx,cy,.94);ctx.fill()}}}}
   const AB=new Map();for(const a of anim){if(a.k==='parrot')continue;const i=clamp(a.y|0,0,R-1)*C+clamp(a.x|0,0,C-1);let L=AB.get(i);if(!L)AB.set(i,L=[]);L.push(a)}
   const lights=[],gi=ghost?ghost[1]*C+ghost[0]:-1;
   for(const i of ORDER){if(!vis(i))continue;const g=G[i],[cx,cy]=CEN[i];
-    if(!g.b)for(const o of g.o)dspr(ctx,o.k,o.x,o.y);
-    if(g.b)drawB(ctx,g.b,cx,cy,t,g.b==='tur'||g.b==='geo'||g.b==='obs'||POW[i],1,i,lights);
-    if(i===gi&&started&&!leaving){const ok=!check(tool,ghost[0],ghost[1]);if(T(tool).b&&!g.b)drawB(ctx,tool,cx,cy,t,true,.55,i,null);ctx.strokeStyle=ok?'#c4e68f':'#e5674e';ctx.lineWidth=1.6;dia(ctx,cx,cy+(WATERY.has(g.t)?2.5:0),.92);ctx.stroke()}
+    if(!g.b){const e0=g.gt?Math.min(1,(now-g.gt)/700):1,sc0=e0<1?Math.max(.01,1+2.7*(e0-1)**3+1.7*(e0-1)**2):1;for(const o of g.o){const sw=SWAYR.test(o.k)?Math.sin(t*1.4+o.x*.07+o.y*.05)*(.035+wx.rain*.06):0;if(sc0===1&&sw===0)dspr(ctx,o.k,o.x,o.y);else{ctx.save();ctx.translate(o.x,o.y);ctx.transform(sc0,0,sw*sc0,sc0,0,0);dspr(ctx,o.k,0,0);ctx.restore()}}}
+    if(g.b){const pw=!NEEDPOW.has(g.b)||POW[i],e=g.bt?Math.min(1,(now-g.bt)/650):1;if(e<1){const k=1+2.7*(e-1)**3+1.7*(e-1)**2;ctx.save();ctx.translate(cx,cy);ctx.scale(1,Math.max(.05,k));drawB(ctx,g.b,0,0,t,pw,1,i,null);ctx.restore()}else drawB(ctx,g.b,cx,cy,t,pw,1,i,lights)}
+    if(i===gi&&started&&!leaving){const ok=!check(tool,ghost[0],ghost[1]);if(T(tool).b&&!g.b)drawB(ctx,tool,cx,cy,t,true,.55,i,null);ctx.strokeStyle=ok?'#c4e68f':'#e5674e';ctx.lineWidth=1.6;dia(ctx,cx,cy+(SUNK.has(g.t)?2.5:0),.92);ctx.stroke()}
     const L=AB.get(i);if(L){L.sort((a,b)=>(a.x+a.y)-(b.x+b.y));for(const a of L){const[px,py]=wpos(a);drawAnimalAt(ctx,a.k,px,py,t,a.f,a.walk,a.graze,a.ph,a.jump)}}
   }
   for(const a of anim)if(a.k==='parrot'){const[px,py]=wpos(a);drawAnimalAt(ctx,a.k,px,py,t,a.f,a.walk,a.graze,a.ph,a.jump)}
@@ -842,8 +901,11 @@ function frame(now){
     if(g.b==='dep'&&POW[i])parts.push({k:'steam',x:cx-9,y:cy-21,vx:3+Math.random()*3,vy:-7,l:1,s:1.4});
     else if(g.b==='geo')parts.push({k:'steam',x:cx+(Math.random()-.5)*4,y:cy-18,vx:2+Math.random()*3,vy:-9,l:1,s:2.4});
     else if(g.b==='nub'&&POW[i])parts.push({k:'mist',x:cx,y:cy-32,vx:(Math.random()-.5)*6,vy:-5,l:1,s:2})}}
+  if(wx.rain>.3&&CL.T>=0&&Math.random()<wx.rain*.9){const i=Math.random()*G.length|0;if(SUNK.has(G[i].t)&&G[i].t!=='bed'&&vis(i)){const[cx,cy]=CEN[i],[px,py]=P(cx,cy+2.5,.2+Math.random()*.6,.2+Math.random()*.6);parts.push({k:'ripple',x:px,y:py,l:1})}}
   for(const p of parts){
     if(p.k==='txt'){ctx.fillStyle='rgba(215,245,160,'+p.l.toFixed(2)+')';ctx.font='600 9px Fredoka,sans-serif';ctx.textAlign='center';ctx.fillText(p.txt,p.x,p.y);p.y-=14*dt;p.l-=dt*.9}
+    else if(p.k==='ripple'){ctx.strokeStyle='rgba(235,245,255,'+(p.l*.7).toFixed(2)+')';ctx.lineWidth=.5;ctx.beginPath();ctx.ellipse(p.x,p.y,(1-p.l)*5+.3,(1-p.l)*2.5+.2,0,0,6.283);ctx.stroke();p.l-=dt*1.8}
+    else if(p.k==='spark'){const a=p.l;Ci(ctx,p.x,p.y,.9*a+.2,'rgba(220,255,170,'+a.toFixed(2)+')');ln(ctx,p.x-1.6*a,p.y,p.x+1.6*a,p.y,'rgba(240,255,200,'+(a*.8).toFixed(2)+')',.35);ln(ctx,p.x,p.y-1.6*a,p.x,p.y+1.6*a,'rgba(240,255,200,'+(a*.8).toFixed(2)+')',.35);p.y+=p.vy*dt;p.l-=dt*1.3}
     else if(p.k==='ring'){ctx.strokeStyle='rgba('+p.col+','+p.l.toFixed(2)+')';ctx.lineWidth=1.2;ctx.beginPath();ctx.ellipse(p.x,p.y,(1-p.l)*30+1,(1-p.l)*15+.5,0,0,6.283);ctx.stroke();p.l-=dt*1.4}
     else if(p.k==='steam'||p.k==='mist'){Ci(ctx,p.x,p.y,p.s,p.k==='mist'?'rgba(215,236,250,'+(p.l*.6).toFixed(2)+')':'rgba(235,235,230,'+(p.l*.55).toFixed(2)+')');p.x+=p.vx*dt;p.y+=p.vy*dt;p.s+=dt*(p.k==='mist'?3.2:2.2);p.l-=dt*.55}
     else if(p.k==='beam'){ctx.strokeStyle='rgba(130,230,255,'+p.l.toFixed(2)+')';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x2,p.y2);ctx.stroke();ctx.strokeStyle='rgba(130,230,255,'+(p.l*.8).toFixed(2)+')';ctx.beginPath();ctx.ellipse(p.x2,p.y2+4,(1.2-p.l)*10,(1.2-p.l)*5,0,0,6.283);ctx.stroke();p.l-=dt*.7}
@@ -851,11 +913,16 @@ function frame(now){
   parts=parts.filter(p=>p.l>0);
   for(const f of flocks){f.x+=f.vx*dt;f.y+=f.vy*dt;for(let k=0;k<f.n;k++){const bx=f.x-k*7-(k%2)*3,by=f.y+(k%2?1:-1)*k*3.5,w=Math.sin(t*9+k+f.ph)*2.2;ctx.strokeStyle='rgba(40,40,40,.85)';ctx.lineWidth=.8;ctx.beginPath();ctx.moveTo(bx-3,by-w);ctx.lineTo(bx,by);ctx.lineTo(bx+3,by-w);ctx.stroke();Ci(ctx,bx+8,by+60,.9,'rgba(0,0,0,.12)')}}
   flocks=flocks.filter(f=>f.x<XB[1]+200);
+  lifts=lifts.filter(L=>{const e=(now-L.t0)/1700;if(e>1)return false;let dy,by=0,al=1;if(e<.35)dy=-140+106*(e/.35);else if(e<.75){const k=(e-.35)/.4;dy=-34-k*40;by=-k*40}else{const k=(e-.75)/.25;dy=-74-k*160;by=-40-k*160;al=1-k}
+    drawB(ctx,L.b,L.x,L.y+by,t,false,al,L.i,null);if(e>.35){ln(ctx,L.x-4,L.y+dy+3,L.x-4,L.y+by-12,'rgba(60,60,60,'+(.7*al).toFixed(2)+')',.5);ln(ctx,L.x+4,L.y+dy+3,L.x+4,L.y+by-12,'rgba(60,60,60,'+(.7*al).toFixed(2)+')',.5)}
+    ctx.save();ctx.globalAlpha=al;drawDrone(ctx,L.x,L.y+dy,t);ctx.restore();return true});
+  {const ca=clamp(1.25-z,0,1)*(1-night*.6)*.55;if(ca>.02){ctx.globalAlpha=ca;for(const cl of clouds)dspr(ctx,'cloud',cl.x-60,cl.y-190,cl.s/140);ctx.globalAlpha=1}}
   if(leaving){const sp=shipPos(now);drawShip(ctx,sp.p[0],sp.p[1],t,sp.p[1]+120)}
   ctx.setTransform(dpr,0,0,dpr,0,0);
   if(night>.01){ctx.fillStyle='rgba(14,22,58,'+(night*.5).toFixed(3)+')';ctx.fillRect(0,0,W,H)}
   if(dusk>.01){ctx.fillStyle='rgba(255,140,60,'+(dusk*.1).toFixed(3)+')';ctx.fillRect(0,0,W,H)}
   if(wx.rain>.01){ctx.fillStyle='rgba(30,40,60,'+(wx.rain*.18).toFixed(3)+')';ctx.fillRect(0,0,W,H)}
+  if(regionId==='polar'&&night>.3){ctx.globalCompositeOperation='lighter';for(let k=0;k<2;k++){const base=H*(.1+k*.07),gr=ctx.createLinearGradient(0,base-20,0,base+150),col=k?'200,110,255':'90,255,170';gr.addColorStop(0,'rgba('+col+',0)');gr.addColorStop(.25,'rgba('+col+','+(.28*night).toFixed(2)+')');gr.addColorStop(1,'rgba('+col+',0)');ctx.fillStyle=gr;ctx.beginPath();for(let x=0;x<=W;x+=12){const y=base+Math.sin(x*.012+t*.35+k*2)*22+Math.sin(x*.031+t*.6)*8;x?ctx.lineTo(x,y):ctx.moveTo(x,y)}for(let x=W;x>=0;x-=12)ctx.lineTo(x,base+140+Math.sin(x*.01+t*.3+k)*30);ctx.closePath();ctx.fill()}ctx.globalCompositeOperation='source-over'}
   if(night>.15){ctx.setTransform(dpr*z,0,0,dpr*z,dpr*(W/2-cam.x*z),dpr*(H/2-cam.y*z));ctx.globalCompositeOperation='lighter';
     for(const[x,y,a,rgb,rr]of lights){const g=ctx.createRadialGradient(x,y,0,x,y,rr*2);g.addColorStop(0,'rgba('+rgb+','+(a*night).toFixed(2)+')');g.addColorStop(1,'rgba('+rgb+',0)');ctx.fillStyle=g;ctx.fillRect(x-rr*2,y-rr*2,rr*4,rr*4)}
     for(let i=0;i<G.length;i++){const g=G[i];if(g.t==='lava'&&vis(i)){const[cx,cy]=CEN[i],gr=ctx.createRadialGradient(cx,cy,0,cx,cy,TW*.6);gr.addColorStop(0,'rgba(255,110,30,'+(night*.5).toFixed(2)+')');gr.addColorStop(1,'rgba(255,110,30,0)');ctx.fillStyle=gr;ctx.fillRect(cx-TW*.6,cy-TW*.6,TW*1.2,TW*1.2)}

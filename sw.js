@@ -1,5 +1,5 @@
 // Renuevo: guarda el juego en el teléfono para jugar sin internet
-const CACHE = 'renuevo-v4';
+const CACHE = 'renuevo-v5';
 const FILES = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -18,6 +18,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(hit => {
+      if (e.request.mode === 'navigate') return fetch(e.request).then(res => { const cp = res.clone(); caches.open(CACHE).then(c => c.put(e.request, cp)); return res; }).catch(() => hit);
       const net = fetch(e.request).then(res => {
         if (res && (res.ok || res.type === 'opaque')) {
           const copy = res.clone();

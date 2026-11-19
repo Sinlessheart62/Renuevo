@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode diffuse_lambert_wrap;
+#include "res://shaders/ghibli.gdshaderinc"
 // Paredes del corte del terreno: estratos de suelo.
 uniform float top_y = 0.0;
 varying vec3 wp;
@@ -14,5 +14,6 @@ void fragment(){
 	c *= 0.85 + 0.15 * hash(floor(wp.x * 9.0) + floor(wp.z * 9.0) * 7.0 + floor(y * 12.0));
 	c *= mix(0.55, 1.0, smoothstep(-2.6, -0.2, y));
 	ALBEDO = pow(c, vec3(2.2));
+	EMISSION = ALBEDO * 0.22;
 	ROUGHNESS = 0.95;
 }

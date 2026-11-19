@@ -1,5 +1,6 @@
 shader_type spatial;
-render_mode diffuse_lambert_wrap, specular_schlick_ggx, cull_disabled;
+render_mode cull_disabled;
+#include "res://shaders/ghibli.gdshaderinc"
 
 uniform float now = 0.0;
 uniform float wind = 1.0;
@@ -42,7 +43,8 @@ void vertex(){
 void fragment(){
 	vec3 c;
 	if (is_grass > 0.5) {
-		c = mix(icol * 0.45, icol * 1.12 * tip_tint.rgb, smoothstep(0.0, 1.0, hgt));
+		c = mix(icol * 0.42, icol * 0.95 * tip_tint.rgb, smoothstep(0.0, 1.0, hgt));
+		c = pow(c, vec3(1.15));
 	} else {
 		c = COLOR.rgb;
 		c = pow(c, vec3(2.2));

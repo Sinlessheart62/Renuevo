@@ -50,6 +50,7 @@ var sky_mat: ShaderMaterial
 var cam_attr: CameraAttributesPractical
 var cloud_sea: MeshInstance3D
 var clouds: Array[Node3D] = []
+var cloud_mat: ShaderMaterial
 var rain_p: CPUParticles3D
 var snow_p: CPUParticles3D
 var fireflies: CPUParticles3D
@@ -91,6 +92,10 @@ func _make_materials() -> void:
 	grass_mat.set_shader_parameter("is_grass", 1.0); grass_mat.set_shader_parameter("sway", .05)
 	flower_mat = ShaderMaterial.new(); flower_mat.shader = vs; flower_mat.set_shader_parameter("sway", .02)
 	flat_mat = ShaderMaterial.new(); flat_mat.shader = load("res://shaders/flat.gdshader")
+	terrain_mat.set_shader_parameter("toon_soft", .34); terrain_mat.set_shader_parameter("rim_amt", 0.0)
+	grass_mat.set_shader_parameter("toon_soft", .3); grass_mat.set_shader_parameter("rim_amt", 0.0)
+	grass_mat.set_shader_parameter("light_tint", Color(.92, .92, .82))
+	veg_mat.set_shader_parameter("toon_soft", .16); veg_mat.set_shader_parameter("rim_amt", .35)
 	mats_now = [terrain_mat, water_mat, veg_mat, grass_mat, flower_mat, flat_mat]
 
 func _make_env() -> void:
@@ -126,8 +131,8 @@ func _make_env() -> void:
 	env.set_glow_level(0, 0.0); env.set_glow_level(1, 0.6); env.set_glow_level(2, 1.0); env.set_glow_level(3, 0.8); env.set_glow_level(4, 0.6)
 	env.fog_enabled = true
 	env.fog_light_color = Color(.78, .84, .92)
-	env.fog_density = .0025
-	env.fog_aerial_perspective = .35
+	env.fog_density = .0012
+	env.fog_aerial_perspective = .2
 	env.fog_sky_affect = .0
 	env.volumetric_fog_enabled = true
 	env.volumetric_fog_density = .006
@@ -136,7 +141,7 @@ func _make_env() -> void:
 	env.volumetric_fog_length = 70.0
 	env.volumetric_fog_ambient_inject = .15
 	env.adjustment_enabled = true
-	env.adjustment_saturation = 1.12
+	env.adjustment_saturation = 1.16
 	env.adjustment_contrast = 1.04
 	we.environment = env
 	add_child(we)
@@ -222,19 +227,32 @@ func _make_nodes() -> void:
 	cloud_sea.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mats_now.append(cm)
 	add_child(cloud_sea)
-	# nubes que pasan sobre la parcela
-	var cmat := StandardMaterial3D.new()
-	cmat.vertex_color_use_as_albedo = true; cmat.vertex_color_is_srgb = true
-	cmat.roughness = 1.0; cmat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	cmat.albedo_color = Color(1, 1, 1, .92)
-	cmat.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
-	for k in 5:
+	# cúmulos alrededor de la isla (visibles) y nubes altas que solo proyectan sombra
+	cloud_mat = ShaderMaterial.new(); cloud_mat.shader = load("res://shaders/flat.gdshader")
+	cloud_mat.set_shader_parameter("toon_soft", .3); cloud_mat.set_shader_parameter("rim_amt", .6)
+	cloud_mat.set_shader_parameter("shade_tint", Color(.75, .78, 1.0))
+	cloud_mat.set_shader_parameter("emis", .32)
+	mats_now.append(cloud_mat)
+	for k in 14:
 		var mi := MeshInstance3D.new()
 		mi.mesh = Geo.cloud(40 + k)
-		mi.material_override = cmat
-		var s := 1.4 + randf() * 1.2
+		mi.material_override = cloud_mat
+		var a := TAU * k / 14 + randf() * .3
+		var d := randf_range(24, 44)
+		var s := randf_range(3.5, 7.0)
+		mi.scale = Vector3(s, s * randf_range(.8, 1.1), s)
+		mi.position = Vector3(cos(a) * d, randf_range(-8, -1.5), sin(a) * d)
+		mi.rotation.y = randf() * TAU
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.set_meta("ring", true)
+		add_child(mi); clouds.append(mi)
+	for k in 5:
+		var mi := MeshInstance3D.new()
+		mi.mesh = Geo.cloud(60 + k)
+		mi.material_override = cloud_mat
+		var s := 2.0 + randf() * 1.4
 		mi.scale = Vector3(s, s, s)
-		mi.position = Vector3(randf_range(-30, 30), 9 + randf() * 3, randf_range(-30, 30))
+		mi.position = Vector3(randf_range(-30, 30), 16 + randf() * 3, randf_range(-30, 30))
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		add_child(mi); clouds.append(mi)
 	# clima
@@ -552,12 +570,12 @@ func _build_grass_chunk(ch: int) -> void:
 			var t: String = G.T[i]
 			if not (t in GRASSY): continue
 			var n := 0; var hgt := .14
-			var base := Color(.36, .62, .24)
+			var base := Color(.40, .68, .22)
 			match t:
-				"grass": n = 90; hgt = .15
-				"flower": n = 70; hgt = .13; base = Color(.42, .66, .28)
-				"forest": n = 40; hgt = .12; base = Color(.26, .5, .2)
-				"wet": n = 26; hgt = .2; base = Color(.36, .54, .26)
+				"grass": n = 120; hgt = .16
+				"flower": n = 90; hgt = .14; base = Color(.48, .72, .26)
+				"forest": n = 50; hgt = .13; base = Color(.28, .54, .2)
+				"wet": n = 30; hgt = .22; base = Color(.36, .58, .28)
 			if reg == "polar": base = base.lerp(Color(.48, .58, .36), .4)
 			if reg == "tropico": base = base.lerp(Color(.2, .62, .25), .25)
 			if G.B[i] != "": n /= 3
@@ -574,7 +592,7 @@ func _build_grass_chunk(ch: int) -> void:
 				var bs := Basis(Vector3.UP, a) * Basis(Vector3.RIGHT, lean)
 				bs = bs.scaled(Vector3(r.randf_range(.8, 1.3), h, 1.0))
 				var vcol := base * r.randf_range(.85, 1.15)
-				vcol = vcol.lerp(Color(.62, .7, .28), r.randf() * .25)
+				vcol = vcol.lerp(Color(.78, .82, .32), pow(r.randf(), 2.0) * .45)
 				buf.append_array([bs.x.x, bs.y.x, bs.z.x, x, bs.x.y, bs.y.y, bs.z.y, y, bs.x.z, bs.y.z, bs.z.z, z,
 					(bt + r.randf() * .5) if bt > -50 else -100.0, vcol.r, vcol.g, vcol.b])
 				cnt += 1
@@ -756,8 +774,14 @@ func _process(dt: float) -> void:
 	_update_fauna(dt)
 	factory.animate_buildings(bnodes, now, dt)
 	for cl in clouds:
-		cl.position.x += dt * .35
-		if cl.position.x > 34: cl.position.x = -34; cl.position.z = randf_range(-26, 26)
+		if cl.has_meta("ring"):
+			var p := cl.position
+			var ang := atan2(p.z, p.x) + dt * .006
+			var d := Vector2(p.x, p.z).length()
+			cl.position = Vector3(cos(ang) * d, p.y, sin(ang) * d)
+		else:
+			cl.position.x += dt * .35
+			if cl.position.x > 34: cl.position.x = -34; cl.position.z = randf_range(-26, 26)
 
 var _rain_vis := 0.0
 func _update_sky(dt: float) -> void:
@@ -775,8 +799,8 @@ func _update_sky(dt: float) -> void:
 	sun.light_energy = lerpf(0.0, 1.55, smoothstep(0.0, .35, day)) * (1.0 - rain * .55)
 	moon.light_energy = night * .38
 	moon.rotation = Vector3(-.9, az + PI, 0)
-	var zen := Color(.27, .52, .86).lerp(Color(.04, .06, .16), night)
-	var hor := Color(.86, .91, .96).lerp(Color(1.0, .68, .45), dusk * .65).lerp(Color(.10, .13, .25), night)
+	var zen := Color(.13, .42, .88).lerp(Color(.04, .06, .16), night)
+	var hor := Color(.80, .90, .97).lerp(Color(1.0, .68, .45), dusk * .65).lerp(Color(.10, .13, .25), night)
 	var grey := Color(.58, .62, .68).lerp(Color(.08, .09, .12), night)
 	zen = zen.lerp(grey, rain * .75); hor = hor.lerp(grey.lightened(.15), rain * .7)
 	sky_mat.set_shader_parameter("zenith", zen)

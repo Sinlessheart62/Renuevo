@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode diffuse_lambert_wrap, specular_schlick_ggx;
+#include "res://shaders/ghibli.gdshaderinc"
 
 // R = tipo, G = tipo anterior, B = avance de la transición, A = capa de ayuda (alcance)
 uniform sampler2D biome : filter_nearest, repeat_disable;
@@ -41,8 +41,11 @@ vec3 tcol(int t, vec2 p, out float rough, out vec3 emis){
 		c = mix(srgb(vec3(0.50,0.37,0.25)), srgb(vec3(0.63,0.48,0.32)), n);
 		c = mix(c, srgb(vec3(0.75,0.68,0.58)), step(0.86, k) * 0.7);
 	} else if (t == 2 || t == 6) { // pasto / prado
-		c = mix(srgb(vec3(0.33,0.58,0.22)), srgb(vec3(0.55,0.74,0.30)), n);
-		c = mix(c, srgb(vec3(0.70,0.78,0.35)), smoothstep(0.6, 0.9, m) * 0.35);
+		c = mix(srgb(vec3(0.36,0.62,0.22)), srgb(vec3(0.60,0.78,0.30)), n);
+		// pinceladas: vetas alargadas más claras, como fondo pintado a mano
+		float br = noise(vec2(p.x * 1.6 + p.y * 0.9, p.y * 7.0 - p.x * 2.0));
+		c = mix(c, srgb(vec3(0.78,0.84,0.38)), smoothstep(0.62, 0.9, br) * 0.35);
+		c = mix(c, srgb(vec3(0.26,0.48,0.20)), smoothstep(0.65, 0.95, m) * 0.25);
 		if (t == 6) c = mix(c, srgb(vec3(0.62,0.78,0.38)), 0.25);
 		if (region == 2.0) c = mix(c, srgb(vec3(0.48,0.60,0.38)), 0.35);
 	} else if (t == 3) { // bosque

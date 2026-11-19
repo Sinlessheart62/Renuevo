@@ -10,13 +10,14 @@ var lamp_off: StandardMaterial3D
 var win_mat: StandardMaterial3D
 var cache := {}
 
-const WHITE := Color("#eeeae2")
-const STEEL := Color("#9aa3a8")
-const DARK := Color("#4a4f55")
-const WOOD := Color("#9a6b44")
-const RUST := Color("#c2683c")
-const CONC := Color("#c9c2b4")
-const ACC := Color("#e3b23c")
+const WHITE := Color("#f4ecdb")
+const STEEL := Color("#7da59c")
+const DARK := Color("#4d4a58")
+const WOOD := Color("#a8744a")
+const RUST := Color("#cf553a")
+const CONC := Color("#d9cdb4")
+const ACC := Color("#efb84a")
+const EYE := Color("#1e1a1a")
 
 func _init() -> void:
 	mat = ShaderMaterial.new(); mat.shader = flat_shader
@@ -418,8 +419,11 @@ func _quad(g: Geo, L: float, H: float, c: Color, belly: Color, antlers: bool, bi
 	# cuello y cabeza
 	var hp := Vector3(0, leg + w * 1.25 + H * .2, L * .52)
 	g.cyl(Vector3(0, leg + w * .6, L * .4), w * .38, w * .3, H * .5, 6, c, c, false, false)
-	g.blob(hp, Vector3(w * .42, w * .42, w * .6), c.darkened(.05), c.lightened(.1), 1, .05)
-	g.blob(hp + Vector3(0, -.01, w * .5), Vector3(w * .22, w * .2, w * .3), c.darkened(.25), c.darkened(.15), 0, 0)
+	g.blob(hp, Vector3(w * .55, w * .52, w * .62), c.darkened(.02), c.lightened(.14), 1, .03)
+	g.blob(hp + Vector3(0, -.02, w * .5), Vector3(w * .26, w * .22, w * .3), belly.darkened(.05), belly, 1, 0)
+	g.blob(hp + Vector3(0, -.005, w * .78), Vector3(w * .08, w * .06, w * .05), EYE, EYE, 0, 0)
+	for sx in [-1, 1]:
+		g.blob(hp + Vector3(sx * w * .33, w * .1, w * .32), Vector3(w * .07, w * .09, w * .05), EYE, EYE.lightened(.2), 1, 0)
 	for sx in [-1, 1]:
 		g.leaf_card(hp + Vector3(sx * w * .25, w * .3, -.01), Vector3(sx * .7, .7, -.2).normalized(), .035, .06, c, belly)
 		if antlers:
@@ -436,7 +440,9 @@ func _quad(g: Geo, L: float, H: float, c: Color, belly: Color, antlers: bool, bi
 
 func _small(g: Geo, L: float, c: Color, belly: Color, ears: bool) -> void:
 	g.blob(Vector3(0, L * .45, 0), Vector3(L * .4, L * .38, L * .55), c.darkened(.05), c.lightened(.1), 1, .05)
-	g.blob(Vector3(0, L * .7, L * .45), Vector3(L * .28, L * .26, L * .3), c, c.lightened(.1), 1, .05)
+	g.blob(Vector3(0, L * .72, L * .45), Vector3(L * .34, L * .31, L * .33), c, c.lightened(.12), 1, .03)
+	for sx in [-1, 1]:
+		g.blob(Vector3(sx * L * .17, L * .8, L * .68), Vector3(L * .05, L * .065, L * .04), EYE, EYE.lightened(.2), 1, 0)
 	g.blob(Vector3(0, L * .35, -L * .5), Vector3(L * .12, L * .12, L * .12), belly, belly, 0, 0)
 	if ears:
 		for sx in [-1, 1]:

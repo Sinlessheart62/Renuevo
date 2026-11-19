@@ -245,7 +245,7 @@ func _process(dt: float) -> void:
 	# desenfoque de maqueta (tilt-shift): más fuerte con la cámara inclinada y cerca
 	var tsm: ShaderMaterial = tilt.material
 	var tk := clampf(1.0 - (rad_to_deg(pitch) - 22.0) / 70.0, 0.15, 1.0)
-	tsm.set_shader_parameter("strength", tk * (1.15 - clampf(dist / 42.0, 0, 1) * .55))
+	tsm.set_shader_parameter("strength", tk * (.85 - clampf(dist / 42.0, 0, 1) * .4))
 	# casilla bajo el ratón
 	if playing and drag_btn == 0:
 		var i := _pick(get_viewport().get_mouse_position())

@@ -2,7 +2,7 @@ shader_type canvas_item;
 // Desenfoque de maqueta (tilt-shift) por altura en pantalla + viñeta suave.
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform float strength = 1.0;
-uniform float band = 0.22;
+uniform float band = 0.27;
 uniform float center = 0.52;
 uniform float vignette = 0.28;
 void fragment(){

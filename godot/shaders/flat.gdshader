@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode diffuse_lambert_wrap, specular_schlick_ggx;
+#include "res://shaders/ghibli.gdshaderinc"
 // Material de objetos construidos y animales: color por vértice (sRGB).
 uniform float now = 0.0;
 uniform float emis = 0.0;

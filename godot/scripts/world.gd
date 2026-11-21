@@ -88,6 +88,7 @@ func _ready() -> void:
 func _make_materials() -> void:
 	terrain_mat = ShaderMaterial.new(); terrain_mat.shader = load("res://shaders/terrain.gdshader")
 	terrain_mat.set_shader_parameter("biome", biome_tex)
+	terrain_mat.set_shader_parameter("grid", Vector2(C, R))
 	water_mat = ShaderMaterial.new(); water_mat.shader = load("res://shaders/water.gdshader")
 	var vs: Shader = load("res://shaders/veg.gdshader")
 	veg_mat = ShaderMaterial.new(); veg_mat.shader = vs; veg_mat.set_shader_parameter("sway", .012)

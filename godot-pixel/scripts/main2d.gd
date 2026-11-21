@@ -20,6 +20,8 @@ var fx_on := true
 var hud_hidden := false
 var args := {}
 var menu_t := 0.0
+var hl_user := false
+var next_b := 0
 
 func _ready() -> void:
 	for a in OS.get_cmdline_user_args():
@@ -36,6 +38,8 @@ func _ready() -> void:
 	ui.to_menu.connect(_to_menu)
 	ui.quit_game.connect(_quit)
 	ui.fx_toggled.connect(_set_fx)
+	ui.highlight_pressed.connect(toggle_highlight)
+	ui.next_building_pressed.connect(goto_next_building)
 	Game.leaving_started.connect(_ship_in)
 	Game.phase_changed.connect(func(_p): ghost_key = "")
 	ui.make_thumbs_2d(board)
@@ -116,6 +120,8 @@ func _unhandled_input(e: InputEvent) -> void:
 				hud_hidden = not hud_hidden
 				ui.hud.visible = not hud_hidden
 			KEY_F1: ui.help_l.visible = not ui.help_l.visible
+			KEY_V: toggle_highlight()
+			KEY_N: goto_next_building()
 			KEY_Z, KEY_EQUAL, KEY_KP_ADD: zoom_lvl = minf(zoom_lvl + 1, 7)
 			KEY_X, KEY_MINUS, KEY_KP_SUBTRACT: zoom_lvl = maxf(zoom_lvl - 1, 2)
 		if k >= KEY_0 and k <= KEY_9 and not ui.any_modal():
@@ -184,7 +190,9 @@ func _process(dt: float) -> void:
 		board.set_hover(-1, true, 0, false)
 		_clear_ghost()
 		ui.set_hover("", "")
+	board.set_highlight(Game.started and not menu_mode and (hl_user or Game.tool_id == "rec"))
 	if Game.started:
+		ui.set_buildings_left(board.bnodes.size(), Game.phase == 3, board.highlight)
 		var dc: Dictionary = Game.day_clock()
 		ui.set_time(int(Game.gtime / D.DAY) + 1, dc.night, Game.wx.rain, Game.CL.T < 0)
 	_ambience()
@@ -291,6 +299,7 @@ func _auto_step(dt: float) -> void:
 		auto_started = true
 		_start(args.get("region", "valle"))
 		if args.has("lush"): _lush()
+		if args.has("hl"): hl_user = true
 		if args.has("zoom"): zoom_lvl = float(args.zoom)
 		if args.has("at"):
 			var c: PackedStringArray = args.at.split(",")
@@ -382,3 +391,19 @@ func _lush() -> void:
 	G.hud()
 	G.fauna(true)
 	G.fauna_changed.emit()
+
+func toggle_highlight() -> void:
+	hl_user = not hl_user
+	ui.say("Resaltar edificios: " + ("activado" if hl_user else "desactivado") + "  (V)")
+
+func goto_next_building() -> void:
+	var L: Array = board.building_tiles()
+	if L.is_empty():
+		ui.say("No queda ningún edificio en la parcela"); return
+	next_b = next_b % L.size()
+	var i: int = L[next_b]
+	next_b += 1
+	t_pos = board.center(i)
+	zoom_lvl = maxf(zoom_lvl, 4)
+	hl_user = true
+	ui.say("%s  ·  %d de %d" % [D.tool(Game.B[i]).n, next_b, L.size()])

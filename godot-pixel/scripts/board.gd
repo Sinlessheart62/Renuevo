@@ -42,6 +42,7 @@ var snow: CPUParticles2D
 var flies: CPUParticles2D
 var clouds: Array[Sprite2D] = []
 var cam: Camera2D
+var highlight := false
 
 func _ready() -> void:
 	G = Game
@@ -306,12 +307,14 @@ func _gen_tile_objs(i: int) -> void:
 			var tw := s.create_tween()
 			tw.tween_property(s, "scale", Vector2(1.15, 1.15), .25).set_trans(Tween.TRANS_BACK)
 			tw.tween_property(s, "scale", Vector2.ONE, .12)
+		if highlight: s.self_modulate = Color(1, 1, 1, .35)
 		tile_nodes[i].append(s)
 
 func _place_building(i: int, anim_in: bool) -> void:
 	var s := _spr("b_" + G.B[i], center(i) + Vector2(0, 6))
 	s.set_meta("id", G.B[i]); s.set_meta("tile", i)
 	bnodes[i] = s
+	if highlight: s.z_index = 4
 	if anim_in:
 		s.scale = Vector2(.3, .3)
 		var tw := s.create_tween()
@@ -430,6 +433,7 @@ func burst(p: Vector2, col: Color, n: int) -> void:
 	b.position = p; b.color = col; b.amount = n; b.restart()
 
 func _draw_top() -> void:
+	_draw_markers()
 	for r in rings:
 		var rad: float = 2 + r[1] * 12
 		top.draw_arc(r[0], rad, 0, TAU, 24, Color(r[2], 1.0 - r[1]), 1.0, false)
@@ -529,3 +533,38 @@ func _birds(dt: float) -> void:
 		s.frame = int(G.now_s * 12 + f[1]) % 8
 		if s.position.x > D.C * T + 40:
 			s.queue_free(); flock.erase(f)
+
+# ======================================================================= resaltar edificios
+func set_highlight(on: bool) -> void:
+	if on == highlight: return
+	highlight = on
+	_apply_highlight()
+
+func _apply_highlight() -> void:
+	for i in tile_nodes.size():
+		for sp in tile_nodes[i]:
+			(sp as Sprite2D).self_modulate = Color(1, 1, 1, .35) if highlight else Color.WHITE
+	for i in bnodes:
+		(bnodes[i] as Sprite2D).z_index = 4 if highlight else 0
+
+func building_tiles() -> Array:
+	var o := []
+	for i in D.C * D.R:
+		if G.B[i] != "": o.append(i)
+	return o
+
+func _draw_markers() -> void:
+	if not highlight: return
+	var t: float = G.now_s
+	for i in bnodes:
+		var c := center(i)
+		var r := Rect2(c - Vector2(8, 8), Vector2(16, 16))
+		var pulse := .55 + .45 * sin(t * 5.0)
+		top.draw_rect(r, Color(1, .85, .2, .25 * pulse))
+		top.draw_rect(r.grow(-.5), Color(1, .85, .2, .9), false, 1.0)
+		# flecha que rebota sobre el edificio
+		var h: float = float(idx.sprites["b_" + G.B[i]].h)
+		var y: float = c.y + 6 - h - 6 - round(absf(sin(t * 4.0 + i)) * 3)
+		var pts := PackedVector2Array([Vector2(c.x - 4, y), Vector2(c.x + 4, y), Vector2(c.x, y + 5)])
+		top.draw_colored_polygon(pts, Color(1, .85, .2))
+		top.draw_polyline(PackedVector2Array([pts[0], pts[1], pts[2], pts[0]]), Color(.25, .14, .06), 1.0)

@@ -20,6 +20,7 @@ Controles
 - Clic derecho (o rueda presionada) + arrastrar: girar e inclinar la cámara
 - WASD / flechas: mover · Q/E: girar 45° · R/F: inclinar · Rueda o Z/X: zoom
 - 1–9 y 0: herramientas · B: bitácora · M: sonido · G: efectos visuales
+- V: resaltar edificios (se activa solo con Reciclar) · N: ir al siguiente edificio
 - H: ocultar interfaz (para capturas) · F11: pantalla completa · Esc: pausa
 
 Arte adicional: paquetes gratuitos "Free Environment" y "Free Animal Pack" de itch.io (uso personal).

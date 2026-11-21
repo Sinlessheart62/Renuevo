@@ -7,6 +7,8 @@ signal continue_game
 signal to_menu
 signal quit_game
 signal fx_toggled(on: bool)
+signal highlight_pressed
+signal next_building_pressed
 
 const PAPER := Color("#f2e2c0")
 const PAPER2 := Color("#dcc396")
@@ -32,6 +34,9 @@ var phase_n: Label
 var goals_box: VBoxContainer
 var mis_box: VBoxContainer
 var mis_count: Label
+var hl_btn: Button
+var bleft_row: HBoxContainer
+var bleft_l: Label
 var mis_panel: PanelContainer
 var leaves_l: Label
 var clim_box: HBoxContainer
@@ -211,11 +216,19 @@ func _build_hud() -> void:
 	var leaf := _icon("leaf", 28, GREEN); r1.add_child(leaf)
 	leaves_l = _lbl("60", 28, F700); r1.add_child(leaves_l)
 	var sp := Control.new(); sp.custom_minimum_size.x = 8; r1.add_child(sp)
+	hl_btn = _small_btn("Edificios  V", func(): highlight_pressed.emit())
+	hl_btn.tooltip_text = "Resalta todos los edificios por encima de los árboles"
+	r1.add_child(hl_btn)
 	r1.add_child(_small_btn("Bitácora  B", func(): toggle_journal()))
 	r1.add_child(_small_btn("Menú  Esc", func(): toggle_pause()))
 	clim_box = HBoxContainer.new(); clim_box.add_theme_constant_override("separation", 8); clim_box.alignment = BoxContainer.ALIGNMENT_END
 	rv.add_child(clim_box)
 	time_l = _lbl("", 15, F500, INK2); time_l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; rv.add_child(time_l)
+	var br := HBoxContainer.new(); br.alignment = BoxContainer.ALIGNMENT_END; br.add_theme_constant_override("separation", 8); rv.add_child(br)
+	bleft_l = _lbl("", 15, F600, INK); br.add_child(bleft_l)
+	var nb := _small_btn("Ir al siguiente  N", func(): next_building_pressed.emit())
+	br.add_child(nb)
+	bleft_row = br
 	# — barra de herramientas (abajo)
 	var bottom := VBoxContainer.new()
 	bottom.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
@@ -243,7 +256,7 @@ func _build_hud() -> void:
 	tp.add_child(toolbar)
 	bottom.add_child(tp)
 	# — ayuda de controles
-	help_l = _lbl("WASD mover · Q/E girar · R/F inclinar · Rueda/Z/X zoom · Clic derecho arrastrar: girar · H ocultar", 14, F500, Color(1, 1, 1, .85))
+	help_l = _lbl("WASD mover · Rueda/Z/X zoom · V resaltar edificios · N siguiente edificio · H ocultar", 14, F500, Color(1, 1, 1, .85))
 	help_l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, .6))
 	help_l.add_theme_constant_override("shadow_offset_x", 1); help_l.add_theme_constant_override("shadow_offset_y", 1)
 	help_l.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -605,7 +618,7 @@ func _how_to() -> void:
 		var v := VBoxContainer.new(); v.add_theme_constant_override("separation", 10); p.add_child(v)
 		v.add_child(_lbl("Cómo se juega", 32, SERIFB))
 		var rt := RichTextLabel.new(); rt.bbcode_enabled = true; rt.fit_content = true; rt.custom_minimum_size.x = 780
-		rt.text = "[b]1. Sanar el suelo.[/b] Pon [b]turbinas[/b] sobre roca para tener energía. Los [b]depuradores[/b] limpian la tierra tóxica y los [b]aspersores[/b] la convierten en pasto. Canales y bombas traen agua.\n\n[b]2. Devolver la vida.[/b] Crea bosques (viveros), flores (colmenas), humedales (hidropónicos) y manglares. Cada uno pide un clima: ajústalo con espejos solares, enfriadores y torres de nubes.\n\n[b]3. Registrar y partir.[/b] Construye observatorios para registrar 3 especies y recicla todos los edificios. Una nave te recoge: no queda rastro.\n\n[b]Controles[/b]\n· Clic izquierdo: construir · arrastrar: mover el mapa\n· Clic derecho o rueda presionada + arrastrar: girar e inclinar\n· WASD / flechas: mover · Q/E: girar · R/F: inclinar · Rueda, Z/X: zoom\n· 1–9, 0: herramientas · B: bitácora · M: sonido · G: efectos visuales · H: ocultar interfaz · F11: pantalla completa · Esc: menú"
+		rt.text = "[b]1. Sanar el suelo.[/b] Pon [b]turbinas[/b] sobre roca para tener energía. Los [b]depuradores[/b] limpian la tierra tóxica y los [b]aspersores[/b] la convierten en pasto. Canales y bombas traen agua.\n\n[b]2. Devolver la vida.[/b] Crea bosques (viveros), flores (colmenas), humedales (hidropónicos) y manglares. Cada uno pide un clima: ajústalo con espejos solares, enfriadores y torres de nubes.\n\n[b]3. Registrar y partir.[/b] Construye observatorios para registrar 3 especies y recicla todos los edificios. Una nave te recoge: no queda rastro.\n\n[b]Controles[/b]\n· Clic izquierdo: construir · arrastrar: mover el mapa\n· WASD / flechas: mover · Rueda, Z/X: zoom\n· V: resaltar edificios (se activa solo con Reciclar) · N: ir al siguiente edificio\n· 1–9, 0: herramientas · B: bitácora · M: sonido · G: efectos visuales · H: ocultar interfaz · F11: pantalla completa · Esc: menú"
 		v.add_child(rt)
 		v.add_child(_btn("Entendido", func(): howto.visible = false))
 	howto.visible = true
@@ -748,3 +761,14 @@ func _refresh_missions() -> void:
 		row.add_child(_lbl("+%d" % m.r, 15, F600, GREEN))
 		mis_box.add_child(row)
 	mis_panel.set_deferred("size", Vector2.ZERO)
+
+var _bl_last := ""
+func set_buildings_left(n: int, phase3: bool, hl: bool) -> void:
+	var key := "%d:%s:%s" % [n, phase3, hl]
+	if key == _bl_last: return
+	_bl_last = key
+	bleft_row.visible = n > 0
+	bleft_l.text = ("Quedan %d edificios" % n) if phase3 else ("%d edificios" % n)
+	bleft_l.add_theme_color_override("font_color", Color("#c0533a") if phase3 else INK2)
+	var sb := _box(Color("#f6d878") if hl else Color("#fbf5e8"), 10, 2, Color("#c9a23a") if hl else Color("#d8cbb0"), 8)
+	hl_btn.add_theme_stylebox_override("normal", sb)

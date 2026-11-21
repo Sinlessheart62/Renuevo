@@ -49,6 +49,10 @@ func _ready() -> void:
 	atlas = load("res://px/tiles.png")
 	kinds = idx.tiles.kinds
 	anim_kinds = idx.tiles.anim
+	# sprites de paquetes externos (itch.io), si están presentes
+	if FileAccess.file_exists("res://px/ext.json"):
+		var ex: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://px/ext.json"))
+		for k in ex: idx.sprites[k] = ex[k]
 	for k in idx.sprites: tex[k] = load("res://px/%s.png" % k)
 	font = load("res://fonts/VT323.ttf")
 	ground = Node2D.new(); add_child(ground); ground.draw.connect(_draw_ground)
@@ -246,20 +250,33 @@ func _gen_tile_objs(i: int) -> void:
 		if occupied and p.distance_to(c) < 7: return
 		list.append([name, p.round()])
 	var reg: String = G.region_id
+	var X := func(n: String) -> bool: return tex.has(n)
 	match t:
 		"forest":
 			var n := 1 + (1 if r.randf() < .45 else 0)
+			var big := false
 			for k in n:
 				var nm := ""
-				if reg == "tropico": nm = ("palm%d" % (r.randi() % 2)) if r.randf() < .4 else ("jungle%d" % (r.randi() % 2))
-				elif reg == "polar": nm = "spruce%d" % (r.randi() % 2)
-				else: nm = ("pine%d" % (r.randi() % 3)) if r.randf() < .45 else ("broad%d" % (r.randi() % 3))
+				var q := r.randf()
+				if reg == "tropico": nm = ("palm%d" % (r.randi() % 2)) if q < .4 else ("jungle%d" % (r.randi() % 2))
+				elif reg == "polar": nm = "x_pine_snow" if (q < .65 and X.call("x_pine_snow")) else "spruce%d" % (r.randi() % 2)
+				else:
+					if q < .16 and X.call("x_pine_big") and not big and k == 0:
+						nm = "x_pine_big"; big = true
+					elif q < .4 and X.call("x_pine_slim0"): nm = "x_pine_slim%d" % (r.randi() % 2)
+					elif q < .55: nm = "pine%d" % (r.randi() % 3)
+					else: nm = "broad%d" % (r.randi() % 3)
+					if reg == "volcan" and r.randf() < .1 and X.call("x_agave0"): nm = "x_agave%d" % (r.randi() % 2)
 				add.call(nm, 4.0)
-			if r.randf() < .3: add.call("bush%d" % (r.randi() % 2), 3.0)
+				if big: break
+			if r.randf() < .3 and not big: add.call("bush%d" % (r.randi() % 2), 3.0)
 		"flower":
-			if r.randf() < .55: add.call("fbush%d" % (r.randi() % 3), 4.0)
+			if reg == "volcan" and r.randf() < .3 and X.call("x_pricklypear"): add.call("x_pricklypear", 5.0)
+			elif r.randf() < .55: add.call("fbush%d" % (r.randi() % 3), 4.0)
 		"grass":
-			if r.randf() < .1: add.call("bush%d" % (r.randi() % 2), 4.0)
+			if reg == "volcan" and X.call("x_cactus0") and r.randf() < .045:
+				add.call(("x_cactus%d" % (r.randi() % 2)) if r.randf() < .4 else ("x_agave%d" % (r.randi() % 2)), 5.0)
+			elif r.randf() < .1: add.call("bush%d" % (r.randi() % 2), 4.0)
 		"wet":
 			add.call("reed%d" % (r.randi() % 2), 4.0)
 		"mang":
@@ -267,11 +284,17 @@ func _gen_tile_objs(i: int) -> void:
 		"sand":
 			if reg == "tropico" and r.randf() < .12: add.call("palm%d" % (r.randi() % 2), 6.0)
 		"tox", "dirt", "ash", "ice":
-			if r.randf() < .05: add.call("dead%d" % (r.randi() % 2), 4.0)
+			if t == "ice" and r.randf() < .05 and X.call("x_ice_big"): add.call("x_ice_big", 7.0)
+			elif r.randf() < .05: add.call(("x_bare" if (r.randf() < .6 and X.call("x_bare")) else "dead%d" % (r.randi() % 2)), 4.0)
 			elif r.randf() < .07: add.call("rock%d" % (r.randi() % 3), 4.0)
 		"rock":
-			add.call("rock%d" % (r.randi() % 3), 3.0)
-			if r.randf() < .4: add.call("rock%d" % (r.randi() % 3), 3.0)
+			if r.randf() < .18 and X.call("x_rock_big"): add.call("x_rock_big", 7.0)
+			else:
+				add.call("rock%d" % (r.randi() % 3), 3.0)
+				if r.randf() < .4: add.call("rock%d" % (r.randi() % 3), 3.0)
+		"sea":
+			if reg == "tropico" and r.randf() < .08 and X.call("x_coral0") and G.touches(i % D.C, i / D.C, ["sand", "mang"]):
+				add.call("x_coral%d" % (r.randi() % 3), 5.0)
 		"mnt":
 			var snowy: bool = (reg == "polar") or (reg == "valle" and G.H[i] >= 4)
 			var nm: String = "peakdark%d" if reg == "volcan" else ("peaksnow%d" if snowy else "peak%d")
@@ -338,7 +361,9 @@ func _sync_fauna() -> void:
 	for a in G.anim:
 		ids[a.id] = true
 		if not anodes.has(a.id):
-			var s := _spr("a_" + a.k, Vector2(a.x * T, a.y * T))
+			var nm: String = ("x_" + a.k) if tex.has("x_" + a.k) else ("a_" + a.k)
+			var s := _spr(nm, Vector2(a.x * T, a.y * T))
+			s.set_meta("nm", nm)
 			if a.k == "manta": s.z_index = -1
 			s.scale = Vector2(.2, .2)
 			s.create_tween().tween_property(s, "scale", Vector2.ONE, .3).set_trans(Tween.TRANS_BACK)
@@ -359,8 +384,15 @@ func _update_fauna() -> void:
 			s.offset.y = -float(idx.sprites["a_" + k].oy) - (14.0 if k == "parrot" else 6.0) - round(sin(t * 3 + a.ph) * 2)
 		s.position = p.round()
 		var dx: float = a.tx - a.x
-		if absf(dx) > .02: s.flip_h = dx < 0
+		var nm: String = s.get_meta("nm", "")
+		if absf(dx) > .02: s.flip_h = (dx > 0) if nm == "x_frog" else (dx < 0)
 		var nf := s.hframes
+		if nm == "x_rabbit":
+			s.frame = (2 + int(t * 12 + a.ph) % 7) if a.walk else (0 if int(t * .5 + a.ph) % 4 else 10)
+			continue
+		if nm == "x_frog":
+			s.frame = int(t * 4 + a.ph) % nf
+			continue
 		if fly or k in ["manta", "whale"]:
 			s.frame = int(t * (8.0 if fly else 1.5) + a.ph) % nf if k != "whale" else (2 if a.jump > .3 else int(t + a.ph) % 2)
 		elif a.walk:
@@ -440,6 +472,7 @@ func _process(dt: float) -> void:
 		if t > 4.5:
 			d.queue_free(); b.queue_free(); lifts.erase(L)
 	top.queue_redraw()
+	_birds(dt)
 	for c in clouds:
 		c.position.x += dt * 6
 		if c.position.x > D.C * T + 80: c.position = Vector2(-80, randf() * D.R * T)
@@ -474,3 +507,25 @@ func _sky(_dt: float) -> void:
 	rain.emitting = r > .25 and not cold and G.started
 	snow.emitting = r > .25 and cold and G.started
 	flies.emitting = night > .6 and G.last_stats.size() and G.last_stats.green > 30 and not cold
+
+var flock: Array = []
+var flock_t := 8.0
+func _birds(dt: float) -> void:
+	if not tex.has("x_bird"): return
+	flock_t -= dt
+	var dc: Dictionary = G.day_clock()
+	if flock_t <= 0 and flock.is_empty() and dc.day > .5 and G.last_stats.size() and G.last_stats.green > 20:
+		flock_t = randf_range(18, 35)
+		var y0 := randf_range(20, D.R * T - 20)
+		for k in randi_range(3, 6):
+			var s := Sprite2D.new(); s.texture = tex["x_bird"]; s.hframes = 8; s.z_index = 6
+			s.position = Vector2(-30 - k * 12 - randf() * 8, y0 + (k % 2) * 8 - k * 3)
+			top.add_child(s)
+			flock.append([s, randf() * 8])
+	for f in flock.duplicate():
+		var s: Sprite2D = f[0]
+		s.position.x += dt * 38
+		s.position.y -= dt * 4
+		s.frame = int(G.now_s * 12 + f[1]) % 8
+		if s.position.x > D.C * T + 40:
+			s.queue_free(); flock.erase(f)

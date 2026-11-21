@@ -22,6 +22,8 @@ Controles
 - 1–9 y 0: herramientas · B: bitácora · M: sonido · G: efectos visuales
 - H: ocultar interfaz (para capturas) · F11: pantalla completa · Esc: pausa
 
+Arte adicional: paquetes gratuitos "Free Environment" y "Free Animal Pack" de itch.io (uso personal).
+
 Las partidas se guardan solas en:
 %APPDATA%\Renuevo
 T

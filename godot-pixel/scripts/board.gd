@@ -43,6 +43,7 @@ var flies: CPUParticles2D
 var clouds: Array[Sprite2D] = []
 var cam: Camera2D
 var highlight := false
+var colony: Node2D
 
 func _ready() -> void:
 	G = Game
@@ -84,6 +85,7 @@ func _ready() -> void:
 		var s := Sprite2D.new(); s.texture = cl_img; s.modulate = Color(1, 1, 1, .18)
 		s.position = Vector2(randf() * D.C * T, randf() * D.R * T); s.scale = Vector2.ONE * randf_range(1.5, 2.5)
 		top.add_child(s); clouds.append(s)
+	colony = preload("res://scripts/colony.gd").new(); colony.name = "Colony"; add_child(colony); colony.setup(self)
 	G.map_rebuilt.connect(rebuild)
 	G.tile_changed.connect(_on_tile)
 	G.building_changed.connect(_on_building)
@@ -241,6 +243,7 @@ func _rnd(i: int, salt: int) -> RandomNumberGenerator:
 func _gen_tile_objs(i: int) -> void:
 	for s in tile_nodes[i]: s.queue_free()
 	tile_nodes[i] = []
+	if i in G.ship_tiles: return    # pista de la nave colonia
 	var t: String = G.T[i]
 	var r := _rnd(i, D.TY.find(t))
 	var c := center(i)

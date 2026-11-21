@@ -9,15 +9,15 @@ const AFW := float(C * R) / 900.0   # más fauna en mapas grandes
 const HS := 0.42          # altura de un escalón de terreno (unidades de mundo)
 
 const TY := ["tox","dirt","grass","forest","water","wet","flower","rock","mnt","sea","sand","mang","ash","ice","lava","oil","bed"]
-const BL := ["","tur","dep","asp","geo","sol","nub","fri","obs","viv","col","hid","pum"]
+const BL := ["","tur","dep","asp","geo","sol","nub","fri","obs","viv","col","hid","pum","cal","mon"]
 
 const GREEN := ["grass","forest","wet","flower","mang"]
 const NOLAND := ["rock","mnt","sea","lava","oil"]
 const DIRTY := ["tox","ash","oil"]
 const WATERY := ["water","wet","sea","mang","oil"]
 const SUNK := ["water","wet","sea","mang","oil","bed"]
-const NEEDPOW := ["dep","asp","sol","nub","fri","pum","viv","hid"]
-const NOBUILD3 := ["tur","geo","dep","asp","pum","can","sol","nub","fri","viv","col","hid"]
+const NEEDPOW := ["dep","asp","sol","nub","fri","pum","viv","hid","mon"]
+const NOBUILD3 := ["tur","geo","dep","asp","pum","can","sol","nub","fri","viv","col","hid","cal","mon"]
 
 const TNAME := {
 	"tox":"Suelo tóxico","dirt":"Tierra limpia","grass":"Pasto","forest":"Bosque","water":"Agua dulce",
@@ -67,6 +67,7 @@ const TOOLS := [
 	{"id":"dep","n":"Depurador","c":8,"ph":1,"b":true,"d":"Limpia toxinas, ceniza y petróleo en radio 2"},
 	{"id":"asp","n":"Aspersor","c":10,"ph":1,"b":true,"d":"Convierte tierra limpia en pasto en radio 2"},
 	{"id":"pum","n":"Bomba","c":8,"ph":1,"b":true,"d":"Sobre un cauce seco: lo llena de agua"},
+	{"id":"cal","n":"Calcificador","c":12,"ph":1,"b":true,"d":"Junto al agua: la usa para convertir la tierra de alrededor en roca (más sitio para turbinas)"},
 	{"id":"can","n":"Canal","c":2,"ph":1,"d":"Excava un cauce; se llena si toca agua"},
 	{"id":"sol","n":"Espejo solar","c":12,"clim":true,"b":true,"d":"+3 °C y derrite hielo en radio 3"},
 	{"id":"nub","n":"Torre de nubes","c":12,"clim":true,"b":true,"d":"+10% de humedad"},
@@ -74,6 +75,7 @@ const TOOLS := [
 	{"id":"viv","n":"Vivero","c":10,"ph":2,"b":true,"d":"Sobre pasto: hace crecer bosque en radio 2"},
 	{"id":"col","n":"Colmena","c":8,"ph":2,"b":true,"d":"Sobre bosque: siembra flores en el pasto a 3 casillas"},
 	{"id":"hid","n":"Hidropónico","c":10,"ph":2,"b":true,"d":"Sobre un aspersor a 3 casillas del agua: crea humedal"},
+	{"id":"mon","n":"Torre monzón","c":30,"ph":2,"b":true,"d":"Siembra nubes: provoca lluvias seguidas y todo crece más rápido"},
 	{"id":"man","n":"Manglar","c":5,"ph":2,"r":["valle","tropico"],"d":"Sobre arena que toque el mar"},
 	{"id":"obs","n":"Observatorio","c":15,"ph":3,"b":true,"d":"Registra animales en radio 3"},
 	{"id":"rec","n":"Reciclar","c":0,"ph":1,"d":"Un dron se lleva el edificio y te devuelve el 50%"}]

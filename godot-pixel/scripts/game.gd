@@ -61,6 +61,9 @@ var paused := false
 var cnt := {}            # contadores para las misiones
 var mis_done := {}
 signal missions_changed
+var ship_i := -1           # casilla central de la nave colonia
+var ship_tiles: Array = []  # casillas reservadas (pista de aterrizaje)
+var peak_b := 0
 
 func _ready() -> void:
 	rng.randomize()
@@ -291,9 +294,41 @@ func set_type(i: int, t: String) -> void:
 func set_building(i: int, b: String) -> void:
 	var old := B[i]
 	B[i] = b
+	if b != "":
+		var nb := 0
+		for q in B: if q != "": nb += 1
+		peak_b = maxi(peak_b, nb)
 	bborn[i] = now_s
 	dirty = true
 	building_changed.emit(i, old)
+
+# ---------------------------------------------------------------- nave colonia
+## Fracción de la nave que sigue armada: cada edificio en pie usa piezas de la nave.
+func ship_keep() -> float:
+	var nb := 0
+	for q in B: if q != "": nb += 1
+	return clampf(1.0 - float(nb) / maxf(12.0, peak_b), 0.0, 1.0)
+
+func _foot(i: int) -> Array:
+	var x := i % C; var y := i / C; var o := []
+	for dy in range(-1, 1):
+		for dx in range(-1, 2):
+			if inb(x + dx, y + dy): o.append(idx(x + dx, y + dy))
+	return o
+
+func pick_ship_site() -> void:
+	var cx := C / 2; var cy := R / 2
+	var best := idx(cx, cy); var bd := 1e9
+	for y in range(3, R - 3):
+		for x in range(3, C - 3):
+			var ok := true
+			for j in _foot(idx(x, y)):
+				if not (T[j] in ["tox", "ash", "dirt", "sand", "ice"]) or B[j] != "": ok = false; break
+			if not ok: continue
+			var d := Vector2(x - cx, y - cy).length() + rng.randf() * 3.0
+			if d < bd: bd = d; best = idx(x, y)
+	ship_i = best
+	ship_tiles = _foot(best)
 
 # ---------------------------------------------------------------- energía y clima
 func rad(i: int) -> int:
@@ -377,6 +412,7 @@ func check(id: String, x: int, y: int) -> String:
 	if not inb(x, y): return "Fuera del mapa"
 	var i := idx(x, y); var g := T[i]; var t := D.tool(id)
 	if id == "rec": return "" if B[i] != "" else "No hay edificio aquí"
+	if i in ship_tiles: return "Aquí está la pista de la nave colonia"
 	if ph_of(t) > phase: return "Se desbloquea en la fase %d" % ph_of(t)
 	if phase == 3 and id in D.NOBUILD3: return "Ya no se construye: registra la fauna y recicla"
 	if leaves < t.c: return "Te faltan hojas"
@@ -403,6 +439,10 @@ func check(id: String, x: int, y: int) -> String:
 	if id == "col":
 		if g != "forest": return "Solo sobre un bosque"
 		return req("flower")
+	if id == "cal":
+		if not (g in ["dirt", "tox", "ash", "sand"]): return "Va sobre tierra, ceniza o arena"
+		if not touches(x, y, ["water", "sea", "wet"]): return "Debe tocar agua: la usa para crear roca"
+		return ""
 	if t.get("b", false):
 		if g in D.WATERY or g == "bed": return "No sobre el agua ni un cauce"
 		if g == "lava": return "Solo la planta geotérmica va sobre lava"
@@ -436,12 +476,32 @@ func apply(id: String, x: int, y: int) -> bool:
 		else:
 			set_type(i, "bed" if id == "can" else "mang")
 			Sfx.play("water" if id == "can" else "seed"); fx.emit("dust", i, null)
+	if id == "cal": _calcify(i)
 	if id == "rec": _c("rec")
 	elif id == "can": _c("can")
 	elif id == "man": _c("man")
 	else: _c("b_" + id)
-	compute_power(); climate(stats()); dirty = true; hud()
+	compute_power(); climate(stats()); dirty = true
+	if id == "mon" and POW[i]: _monsoon(true)
+	hud()
 	return true
+
+func _calcify(i: int) -> void:
+	var x := i % C; var y := i / C; var c := []
+	for dy in range(-1, 2):
+		for dx in range(-1, 2):
+			if (dx or dy) and inb(x + dx, y + dy):
+				var j := idx(x + dx, y + dy)
+				if T[j] in ["dirt", "tox", "ash", "sand"] and B[j] == "" and not (j in ship_tiles): c.append(j)
+	c.shuffle()
+	for k in mini(5, c.size()):
+		set_type(c[k], "rock"); fx.emit("ring", c[k], Color(.8, .8, .85))
+	if c.size(): Sfx.play("place")
+
+func _monsoon(now := false) -> void:
+	if wx.on or phase >= 3: return
+	wx.on = true; wx.until = gtime + 30 + rng.randf() * 10; _c("rain")
+	toast.emit(("La torre monzón trae nieve" if CL.T < 0 else "La torre monzón trae lluvia: todo crece más rápido") if now or rng.randf() < .5 else ("Nieva otra vez" if CL.T < 0 else "Llueve otra vez"))
 
 func grow(i: int, t: String) -> bool:
 	if req(t) != "": return false
@@ -481,6 +541,10 @@ func tick() -> void:
 						var j := idx(x + dx, y + dy)
 						if T[j] == "grass" and B[j] == "": c.append(j)
 			if c.size(): grow(pickr(c), tt)
+			continue
+		if b == "cal": continue
+		if b == "mon":
+			if POW[i] and not wx.on and rng.randf() < .04: _monsoon()
 			continue
 		if b == "pum":
 			if not POW[i]: continue
@@ -708,7 +772,7 @@ func _process(dt: float) -> void:
 		if fauna_acc > .7:
 			fauna_acc = 0; fauna()
 		if dirty and now_s - last_save > 8: save()
-		if leaving and now_s - leave_t > 16: finish()
+		if leaving and now_s - leave_t > 19: finish()
 	wx.rain += ((1.0 if wx.on else 0.0) - wx.rain) * minf(1, dt * .6)
 	move_animals(dt)
 
@@ -720,7 +784,7 @@ func day_clock() -> Dictionary:
 func start_leaving() -> void:
 	if leaving: return
 	leaving = true; leave_t = now_s
-	toast.emit("La nave viene a recogerte")
+	toast.emit("La nave colonia está completa: ¡hora de partir!")
 	Sfx.play("ship")
 	leaving_started.emit()
 
@@ -757,6 +821,7 @@ func new_game(id: String) -> void:
 		if a.begins_with("--seed="):
 			seed_v = int(a.split("=")[1]); rng.seed = seed_v
 	gen(seed_v)
+	pick_ship_site(); peak_b = 0
 	leaves = 130; phase = 1; b3 = 0; gtime = D.DAY * .06
 	seen = {}; scanned = {}; known = {}
 	for t in T: known[t] = true
@@ -768,7 +833,7 @@ func new_game(id: String) -> void:
 	hud(); fauna_changed.emit()
 
 func preview(id: String) -> void:
-	set_region(id); seed_v = rng.randi() & 0xffffff; gen(seed_v); compute_power(); reset_run()
+	set_region(id); seed_v = rng.randi() & 0xffffff; gen(seed_v); pick_ship_site(); peak_b = 0; compute_power(); reset_run()
 	map_rebuilt.emit(); hud()
 
 func begin() -> void:
@@ -781,7 +846,7 @@ func snap() -> Dictionary:
 	for i in C * R:
 		ts += char(97 + D.TY.find(T[i])); bs += char(97 + D.BL.find(B[i]))
 	return {"v":3,"ts":Time.get_unix_time_from_system(),"region":region_id,"seed":seed_v,"leaves":leaves,"phase":phase,"b3":b3,
-		"gt":roundi(gtime),"seen":seen.keys(),"sc":scanned.keys(),"kn":known.keys(),"ms":roundi(play_s * 1000),"t":ts,"b":bs,"mis":mis_done.keys(),"cnt":cnt}
+		"gt":roundi(gtime),"seen":seen.keys(),"sc":scanned.keys(),"kn":known.keys(),"ms":roundi(play_s * 1000),"t":ts,"b":bs,"mis":mis_done.keys(),"cnt":cnt,"ship":ship_i,"pk":peak_b}
 
 func valid(s) -> bool:
 	return s is Dictionary and int(s.get("v", 0)) == 3 and D.REGIONS.has(s.get("region", "")) and str(s.get("t", "")).length() == C * R
@@ -803,6 +868,13 @@ func restore(s: Dictionary) -> void:
 	mis_done = {}
 	for k in s.get("mis", []): mis_done[k] = true
 	cnt = s.get("cnt", {}).duplicate()
+	peak_b = int(s.get("pk", 0))
+	if int(s.get("ship", -1)) >= 0:
+		ship_i = int(s.ship); ship_tiles = _foot(ship_i)
+	else: pick_ship_site()
+	var nb := 0
+	for q in B: if q != "": nb += 1
+	peak_b = maxi(peak_b, nb)
 	for t in T: known[t] = true
 	play_s = float(s.get("ms", 0)) / 1000.0
 	reset_run()

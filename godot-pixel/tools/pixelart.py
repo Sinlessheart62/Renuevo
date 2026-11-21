@@ -677,9 +677,46 @@ def b_obs(frame):
     c.outline()
     return c
 
+def b_calc(frame):
+    """Calcificador: toma agua y la convierte en roca."""
+    c = Cv(24, 24)
+    pad(c, 12, 20, 9)
+    c.rect(5, 9, 10, 11, 'steel', 3)
+    c.blob(10, 9, 5, 2.2, 'steel', lift=.25, inner_line=False)
+    for y in range(11, 19): c.px(7, y, 'water', 4 if (y + frame) % 3 else 6)
+    c.rect(15, 15, 6, 2, 'steel', 2, False)
+    for k, (x, h) in enumerate([(17, 5), (20, 3), (14, 2)]):
+        for yy in range(h):
+            for xx in range(2):
+                c.px(x + xx, 19 - yy, 'rock', 4 - yy % 2 + (1 if xx == 0 else 0))
+    c.px(10, 6 - frame % 2, 'water', 5)
+    lamp(c, 12, 12, frame % 2 == 0)
+    c.outline()
+    return c
+
+def b_monsoon(frame):
+    """Torre monzón: siembra nubes para provocar lluvias."""
+    c = Cv(20, 44)
+    pad(c, 10, 40, 6)
+    for y in range(12, 40):
+        w = 1.5 if y < 26 else 2.6
+        for x in range(20):
+            dx = x + .5 - 10
+            if abs(dx) <= w: c.px(x, y, 'steel', 4 if dx < 0 else 3)
+    for y in range(16, 40, 6):
+        for x in range(6, 14):
+            if c.solid[y, x]: c.px(x, y, 'blue', 3)
+    c.blob(10, 11, 6, 2.2, 'white', lift=.2, inner_line=False)
+    c.rect(9, 6, 3, 4, 'steel', 4)
+    for k in range(3):
+        cx = 4 + ((frame * 2 + k * 5) % 12); cy = 3 + (k % 2)
+        c.blob(cx, cy, 2.6, 1.6, 'white', lift=.3, inner_line=False)
+    c.outline()
+    return c
+
 BLD = {'tur': (b_turbine, 4), 'geo': (b_geo, 1), 'dep': (b_scrub, 2), 'asp': (b_sprink, 4), 'pum': (b_pump, 2),
        'sol': (b_solar, 4), 'nub': (b_cloud, 1), 'fri': (b_cooler, 2), 'viv': (b_nursery, 1), 'col': (b_hive, 4),
-       'hid': (b_hydro, 4), 'obs': (b_obs, 3)}
+       'hid': (b_hydro, 4), 'obs': (b_obs, 3), 'cal': (b_calc, 2), 'mon': (b_monsoon, 4)}
 for k, (fn, nf) in BLD.items():
     save_sprite('b_' + k, [fn(f) for f in range(nf)])
 
@@ -888,6 +925,98 @@ def fence_v():
     c.outline()
     return c
 save_sprite('fence_v', [fence_v()])
+
+# =================================================================== nave colonia
+def lander(frame):
+    """Nave de aterrizaje. frame 0 = cerrada, 1 = rampa abierta, 2 = motores encendidos."""
+    W, H = 64, 54
+    c = Cv(W, H)
+    cx = 32
+    if frame != 2: c.shadow(cx, 50, 26, 4, 80)
+    # patas
+    for sx in (-1, 1):
+        x0 = cx + sx * 14; x1 = cx + sx * 24
+        c.line(x0, 34, x1, 48, 'steel', 2); c.line(x0, 35, x1, 49, 'steel', 1)
+        c.rect(x1 - 2, 48, 5, 2, 'steel', 3, False)
+    c.line(cx, 38, cx, 49, 'steel', 2); c.rect(cx - 2, 49, 5, 1, 'steel', 3, False)
+    # toberas
+    for nx in (cx - 9, cx + 9):
+        c.blob(nx, 40, 4, 3, 'grey', lift=-.1, inner_line=False)
+        c.rect(nx - 2, 41, 5, 2, 'black', 3, False)
+        if frame == 2: c.rect(nx - 2, 42, 5, 1, 'orange', 4, False)
+    # casco
+    c.blob(cx, 28, 25, 12, 'white', lift=.05, inner_line=False)
+    c.blob(cx, 22, 18, 11, 'white', lift=.2, inner_line=False)
+    for x in range(W):
+        for y in (30, 31):
+            if c.solid[y, x]: c.px(x, y, 'orange', 3 if y == 30 else 2)
+    for x in range(cx - 20, cx + 21, 4):
+        if c.solid[34, x]: c.px(x, 34, 'grey', 2)
+    # cabina
+    c.blob(cx - 2, 16, 9, 5, 'glass', lift=.25, inner_line=False)
+    c.px(cx - 6, 14, 'glass', 5); c.px(cx - 5, 13, 'glass', 5)
+    # antena y luces
+    c.line(cx + 10, 11, cx + 13, 4, 'steel', 3); c.px(cx + 13, 3, 'red', 4)
+    for k, x in enumerate(range(cx - 18, cx + 19, 9)):
+        lamp(c, x, 27, (k + frame) % 2 == 0)
+    # escotilla / rampa
+    if frame == 1:
+        c.rect(cx - 4, 33, 9, 6, 'black', 2, False)
+        for y in range(39, 47):
+            w = 4 + (y - 39) // 3
+            for x in range(cx - w, cx + w + 1): c.px(x, y, 'steel', 3 if (y % 2) else 4)
+    else:
+        c.rect(cx - 4, 33, 9, 6, 'steel', 3)
+        c.line(cx - 4, 33, cx + 4, 33, 'steel', 1)
+    c.outline()
+    return c
+save_sprite('lander', [lander(f) for f in range(3)], ox=32, oy=50)
+
+def flame(frame):
+    c = Cv(8, 18)
+    L = [12, 16, 10, 14][frame]
+    for y in range(L):
+        w = 3.2 * (1 - y / L) ** .6
+        for x in range(8):
+            dx = abs(x + .5 - 4)
+            if dx <= w:
+                i = 4 if dx < w * .45 else (3 if y < L * .6 else 2)
+                c.px(x, y, 'lava' if y > 2 else 'yellow', i + (1 if y < 3 else 0))
+    return c
+save_sprite('flame', [flame(f) for f in range(4)], ox=4, oy=0)
+
+def worker(frame):
+    """Colono: 0-1 caminar, 2 quieto, 3-4 martillar."""
+    c = Cv(9, 13)
+    c.shadow(4.5, 12, 3, 1, 70)
+    lx = [(3, 5), (4, 4), (3, 5), (3, 5), (3, 5)][frame]
+    ly = [(11, 10), (11, 11), (11, 11), (11, 11), (11, 11)][frame]
+    c.px(lx[0], ly[0], 'steel', 1); c.px(lx[0], ly[0] - 1, 'orange', 2)
+    c.px(lx[1], ly[1], 'steel', 1); c.px(lx[1], ly[1] - 1, 'orange', 2)
+    c.rect(3, 6, 3, 4, 'orange', 3)
+    c.px(4, 7, 'white', 4)
+    c.rect(3, 3, 3, 3, 'cream', 4, False)
+    c.rect(3, 2, 3, 2, 'white', 5, False); c.px(2, 3, 'white', 4); c.px(6, 3, 'white', 4)
+    c.px(5, 4, 'black', 1)
+    if frame in (3, 4):
+        if frame == 3:
+            c.line(6, 6, 7, 3, 'wood', 3); c.px(7, 2, 'steel', 4); c.px(8, 2, 'steel', 3)
+        else:
+            c.line(6, 7, 8, 8, 'wood', 3); c.px(8, 9, 'steel', 4); c.px(8, 8, 'steel', 3)
+    else:
+        c.px(2, 7, 'orange', 2); c.px(6, 7 + (frame % 2), 'orange', 2)
+    c.outline()
+    return c
+save_sprite('worker', [worker(f) for f in range(5)], ox=4, oy=12)
+
+def part(frame):
+    c = Cv(6, 5)
+    if frame == 0: c.rect(0, 1, 6, 3, 'white', 4); c.px(1, 2, 'orange', 3)
+    elif frame == 1: c.rect(1, 0, 3, 5, 'steel', 4); c.px(2, 2, 'glass', 4)
+    else: c.rect(0, 1, 5, 3, 'grey', 3); c.px(4, 1, 'orange', 4)
+    c.outline()
+    return c
+save_sprite('part', [part(f) for f in range(3)], ox=3, oy=2)
 
 json.dump(INDEX, open(f'{OUT}/index.json', 'w'), indent=1)
 print('ok', len(INDEX['sprites']), 'sprites; atlas', atlas.size)

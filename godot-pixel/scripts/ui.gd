@@ -395,7 +395,7 @@ func build_toolbar() -> void:
 		k += 1
 		var b := Button.new()
 		b.toggle_mode = true
-		b.custom_minimum_size = Vector2(92, 112)
+		b.custom_minimum_size = Vector2(86, 112)
 		b.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 		b.tooltip_text = t.d
 		var v := VBoxContainer.new(); v.name = "v"; v.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -404,7 +404,7 @@ func build_toolbar() -> void:
 		b.add_child(v)
 		var key := _lbl(str(k % 10) if k <= 10 else "", 12, F600, INK2.lightened(.2))
 		key.position = Vector2(8, 4); key.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		var tr := TextureRect.new(); tr.custom_minimum_size = Vector2(84, 64)
+		var tr := TextureRect.new(); tr.custom_minimum_size = Vector2(78, 64)
 		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE

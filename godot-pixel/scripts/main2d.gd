@@ -13,14 +13,13 @@ var drag_moved := false
 var last_mouse := Vector2.ZERO
 var ghost: Sprite2D
 var ghost_key := ""
-var ship: Sprite2D
-var ship_t := 0.0
 var menu_mode := true
 var fx_on := true
 var hud_hidden := false
 var args := {}
 var menu_t := 0.0
 var hl_user := false
+var intro_msg := ""
 var next_b := 0
 
 func _ready() -> void:
@@ -62,13 +61,18 @@ func _menu() -> void:
 func _start(id: String) -> void:
 	Game.new_game(id)
 	_begin()
-	ui.say(Game.REG.n + ": " + ("pon turbinas sobre roca para empezar" if id != "volcan" else "pon una geotérmica sobre la lava para empezar"))
+	board.colony.start_intro()
+	ui.hud.visible = false
+	intro_msg = Game.REG.n + ": " + ("pon turbinas sobre roca para empezar" if id != "volcan" else "pon una geotérmica sobre la lava para empezar")
+	t_pos = board.colony.base_pos() + Vector2(0, -20)
+	zoom_lvl = 4
 
 func _continue() -> void:
 	var s = Game.load_save()
 	if s == null: return
 	Game.restore(s)
 	_begin()
+	board.colony.start_static()
 	ui.say("Partida recuperada: " + Game.REG.n)
 
 func _begin() -> void:
@@ -79,11 +83,11 @@ func _begin() -> void:
 	Game.begin()
 	t_pos = Vector2(D.C, D.R) * 8
 	zoom_lvl = 3
-	if ship: ship.queue_free(); ship = null
 
 func _to_menu() -> void:
 	if Game.started and not Game.won: Game.save()
 	Game.started = false
+	board.colony.clear()
 	_clear_ghost()
 	_menu()
 
@@ -102,6 +106,8 @@ func _set_fx(on: bool) -> void:
 
 # ======================================================================= entrada
 func _unhandled_input(e: InputEvent) -> void:
+	if _in_intro() and ((e is InputEventKey and e.pressed and not e.echo) or (e is InputEventMouseButton and e.pressed and e.button_index == MOUSE_BUTTON_LEFT)):
+		board.colony.skip_intro(); get_viewport().set_input_as_handled(); return
 	if e is InputEventKey and e.pressed and not e.echo:
 		var k: int = e.keycode
 		if k == KEY_F11:
@@ -159,9 +165,15 @@ func _pick() -> int:
 
 # ======================================================================= bucle
 func _process(dt: float) -> void:
-	var playing: bool = Game.started and not menu_mode and not ui.any_modal()
-	Game.paused = Game.started and not menu_mode and (ui.pause.visible or ui.journal.visible)
-	if Game.started and not menu_mode:
+	var playing: bool = Game.started and not menu_mode and not ui.any_modal() and not _in_intro() and not Game.leaving
+	Game.paused = Game.started and not menu_mode and (ui.pause.visible or ui.journal.visible or _in_intro())
+	var col: Node2D = board.colony
+	if intro_msg != "" and col.intro_done():
+		ui.hud.visible = not hud_hidden
+		ui.say(intro_msg); intro_msg = ""
+	if col.mode in ["intro", "leave"] and col.ship and col.alt < 140:
+		t_pos = t_pos.lerp(col.ship.position + Vector2(0, -24), minf(1, dt * (3.0 if col.mode == "intro" else 1.5)))
+	if Game.started and not menu_mode and not _in_intro():
 		var sp := 260.0 * dt / zoom_lvl
 		if Input.is_key_pressed(KEY_A) or Input.is_key_pressed(KEY_LEFT): t_pos.x -= sp
 		if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT): t_pos.x += sp
@@ -171,7 +183,6 @@ func _process(dt: float) -> void:
 		menu_t += dt
 		t_pos = Vector2(D.C, D.R) * 8 + Vector2(cos(menu_t * .05) * 60, sin(menu_t * .07) * 40)
 	t_pos = t_pos.clamp(Vector2(-24, -24), Vector2(D.C * 16 + 24, D.R * 16 + 24))
-	if ship and ship_t < 14: _ship_update(dt)
 	# zoom entero en píxeles de pantalla (para que el pixel art quede nítido)
 	var root_s: float = get_tree().root.get_final_transform().get_scale().x
 	var z := maxf(1.0, round(zoom_lvl * root_s)) / root_s
@@ -179,6 +190,7 @@ func _process(dt: float) -> void:
 	cam.position = cam.position.lerp(t_pos, minf(1, dt * 10))
 	var px := 1.0 / (z * root_s)
 	cam.position = (cam.position / px).round() * px
+	cam.offset = (Vector2(randf_range(-1, 1), randf_range(-1, 1)) * col.shake * 2.5).round() if col.shake > 0 else Vector2.ZERO
 	# casilla bajo el ratón
 	if playing and drag_btn == 0:
 		var i := _pick()
@@ -246,27 +258,16 @@ func _ambience() -> void:
 		"amb_night": clampf(gr * 1.4, 0, .5) * night * (0.0 if cold else 1.0),
 		"amb_lava": .25 if Game.region_id == "volcan" else 0.0})
 
-# ======================================================================= nave de salida
-func _ship_in() -> void:
-	ship = Sprite2D.new(); ship.texture = board.tex["airship"]; ship.z_index = 5
-	board.add_child(ship)
-	ship_t = 0
-	_clear_ghost()
-	ui.hud.visible = false
+# ======================================================================= nave colonia
+func _in_intro() -> bool:
+	return Game.started and not menu_mode and not board.colony.intro_done()
 
-func _ship_update(dt: float) -> void:
-	ship_t += dt
-	var c := Vector2(D.C, D.R) * 8
-	var p: Vector2
-	if ship_t < 5: p = c + Vector2(lerpf(-300, 0, ease(ship_t / 5.0, .4)), -40)
-	elif ship_t < 9: p = c + Vector2(0, -40 + sin((ship_t - 5) * 2) * 2)
-	else:
-		var k := (ship_t - 9) / 5.0
-		p = c + Vector2(k * k * 400, -40 - k * k * 200)
-	ship.position = p.round()
-	t_pos = t_pos.lerp(p + Vector2(0, 40), dt * 1.5)
-	if ship_t >= 14:
-		ship.queue_free(); ship = null
+func _ship_in() -> void:
+	_clear_ghost()
+	hl_user = false
+	ui.hud.visible = false
+	zoom_lvl = 4
+	board.colony.start_leave()
 
 # ======================================================================= pruebas automáticas
 var auto_t0 := 0.0
@@ -309,7 +310,7 @@ func _auto_step(dt: float) -> void:
 	if not auto_started: return
 	Game.leaves = maxi(Game.leaves, 400)
 	var speed := int(args.get("speed", "3"))
-	if not Game.won and not Game.leaving and args.has("play"):
+	if not Game.won and not Game.leaving and args.has("play") and board.colony.intro_done():
 		for k in speed: Game.tick()
 		Game.gtime += dt * (speed - 1)
 		auto_act += dt
@@ -317,6 +318,7 @@ func _auto_step(dt: float) -> void:
 			auto_act = 0
 			for k in 3: _auto_action()
 	if args.has("time"): Game.gtime = D.DAY * float(args.time)
+	if Game.leaving and auto_next_shot > auto_t0 + 1.6: auto_next_shot = auto_t0 + 1.6
 	if auto_t0 >= auto_next_shot:
 		_shot("f%d" % Game.phase)
 		auto_next_shot = auto_t0 + float(args.get("every", "6"))
@@ -332,13 +334,13 @@ func _auto_action() -> void:
 	if s.is_empty(): return
 	var tries := []
 	if G.phase < 3:
-		tries = ["geo", "tur", "dep", "asp", "pum", "can"]
+		tries = ["geo", "tur", "dep", "asp", "pum", "can", "cal"]
 		var ph2 := G.phase == 2
 		if G.ph_of(D.tool("sol")) <= G.phase:
 			if G.CL.T < (12 if ph2 else 2) or s.ice > 0: tries.append("sol")
 			if G.CL.T > 26: tries.append("fri")
 			if G.CL.H < (55 if ph2 else 40): tries.append("nub")
-		if ph2: tries += ["viv", "col", "hid", "man", "asp", "dep"]
+		if ph2: tries += ["viv", "col", "hid", "man", "asp", "dep", "mon"]
 	else:
 		if G.scanned.size() < 3:
 			var nobs := 0

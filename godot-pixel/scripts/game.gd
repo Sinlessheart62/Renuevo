@@ -13,8 +13,8 @@ signal leaving_started
 signal finished(text: String)
 signal scanned_animal(i: int, a: Dictionary)
 
-const C := 30
-const R := 30
+const C := 44
+const R := 44
 const SKEY := "user://partida.json"
 const PKEY := "user://progreso.json"
 
@@ -58,6 +58,9 @@ var now_s := 0.0
 var rng := RandomNumberGenerator.new()
 var last_stats: Dictionary = {}
 var paused := false
+var cnt := {}            # contadores para las misiones
+var mis_done := {}
+signal missions_changed
 
 func _ready() -> void:
 	rng.randomize()
@@ -126,6 +129,7 @@ func _noise_grid(r: Mulberry, n: int) -> Callable:
 		return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v
 
 # ---------------------------------------------------------------- generación
+const AF := float(C * R) / 900.0   # factor de área respecto al mapa de 30x30
 func gen(sd: int) -> void:
 	var r := Mulberry.new(sd)
 	var n1 := _noise_grid(r, 3)
@@ -166,8 +170,8 @@ func gen(sd: int) -> void:
 			for x in C:
 				if T[idx(x, y)] != "sea" and touches(x, y, ["sea"]):
 					T[idx(x, y)] = "sand"; H[idx(x, y)] = 1
-		for k in 8: blob.call(3 + r.next() * (C - 6), 3 + r.next() * (R - 6), .6 + r.next() * 1.0, "rock", "tox")
-		for k in 11:
+		for k in int(8 * AF): blob.call(3 + r.next() * (C - 6), 3 + r.next() * (R - 6), .6 + r.next() * 1.0, "rock", "tox")
+		for k in int(11 * AF):
 			var cx := int(r.next() * C); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if T[j] == "tox" and r.next() < .7: T[j] = "dirt"
@@ -189,20 +193,29 @@ func gen(sd: int) -> void:
 				if cone > 2.4:
 					H[idx(x, y)] = mini(D.MAXH, int(round(cone)))
 					T[idx(x, y)] = "lava" if d < 1.2 else "mnt"
-		for k in 5:
+		var v2x := C - 1 - vx + (r.next() - .5) * 6; var v2y := R - 1 - vy + (r.next() - .5) * 6
+		for y2 in R:
+			for x2 in C:
+				var d2 := Vector2(x2 - v2x, y2 - v2y).length()
+				var cone2 := 4.6 - d2 * .8
+				if cone2 > 2.4:
+					H[idx(x2, y2)] = mini(D.MAXH, int(round(cone2)))
+					T[idx(x2, y2)] = "lava" if d2 < 1.0 else "mnt"
+		for k in int(5 * AF):
 			var x := vx; var y := vy; var a := r.next() * 6.28
+			if k % 2 == 1: x = v2x; y = v2y
 			for s in 18:
 				x += cos(a) + (r.next() - .5) * .9; y += sin(a) + (r.next() - .5) * .9
 				var xi := int(round(x)); var yi := int(round(y))
 				if not inb(xi, yi): break
 				if s > 1: T[idx(xi, yi)] = "lava"
-		for k in 9: blob.call(r.next() * C, r.next() * R, .6 + r.next() * 1.1, "rock", "ash")
+		for k in int(9 * AF): blob.call(r.next() * C, r.next() * R, .6 + r.next() * 1.1, "rock", "ash")
 		var y := 2 + int(r.next() * (R - 4))
 		for x in C:
 			if inb(x, y) and T[idx(x, y)] != "lava" and T[idx(x, y)] != "mnt":
 				T[idx(x, y)] = "bed"; H[idx(x, y)] = maxi(1, H[idx(x, y)] - 1)
 			y = clampi(y + int(round(r.next() * 2 - 1)), 1, R - 2)
-		for k in 11:
+		for k in int(11 * AF):
 			var cx := int(r.next() * C); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if (T[j] == "tox" or T[j] == "ash") and r.next() < .75: T[j] = "dirt"
@@ -214,12 +227,12 @@ func gen(sd: int) -> void:
 				if m > .4:
 					T[idx(x, y)] = "mnt"; H[idx(x, y)] = mini(D.MAXH, 3 + int(round(m * .8)))
 		if region_id == "valle":
-			for k in 6: blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "ash", "tox")
+			for k in int(6 * AF): blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "ash", "tox")
 		else:
-			for k in 8: blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "tox", "ice")
-		for k in 9: blob.call(4 + r.next() * (C - 8), r.next() * R, .6 + r.next() * 1.1, "rock", base)
-		for rv in 2:
-			_river(r, 4 + int(r.next() * (R / 2 - 6)) + rv * (R / 2))
+			for k in int(8 * AF): blob.call(5 + r.next() * (C - 10), r.next() * R, 1.2 + r.next() * 1.6, "tox", "ice")
+		for k in int(9 * AF): blob.call(4 + r.next() * (C - 8), r.next() * R, .6 + r.next() * 1.1, "rock", base)
+		for rv in 3:
+			_river(r, 3 + int(r.next() * (R / 3 - 5)) + rv * (R / 3))
 		_coast_and_more(r, base)
 	_rock_grid(r)
 
@@ -242,7 +255,7 @@ func _coast_and_more(r: Mulberry, base: String) -> void:
 					T[j] = "sea"; H[j] = 0
 				else:
 					T[j] = "sand"; H[j] = 1
-		for k in 9:
+		for k in int(9 * AF):
 			var cx := 5 + int(r.next() * (C - 10)); var cy := int(r.next() * R)
 			for j in [idx(cx, cy)] + nb4(cx, cy):
 				if T[j] == base and r.next() < .75: T[j] = "dirt"
@@ -263,6 +276,12 @@ func _rock_grid(r: Mulberry) -> void:
 
 func set_type(i: int, t: String) -> void:
 	var old := T[i]
+	if started:
+		if old in D.DIRTY and (t == "dirt" or t == "sea"): _c("clean")
+		if old == "oil": _c("oil")
+		if old == "ice" and t == "dirt": _c("melt")
+		if old == "dirt" and t == "grass": _c("grass")
+		if old == "bed" and t == "water": _c("fill")
 	T[i] = t
 	known[t] = true
 	born[i] = now_s
@@ -417,6 +436,10 @@ func apply(id: String, x: int, y: int) -> bool:
 		else:
 			set_type(i, "bed" if id == "can" else "mang")
 			Sfx.play("water" if id == "can" else "seed"); fx.emit("dust", i, null)
+	if id == "rec": _c("rec")
+	elif id == "can": _c("can")
+	elif id == "man": _c("man")
+	else: _c("b_" + id)
 	compute_power(); climate(stats()); dirty = true; hud()
 	return true
 
@@ -500,12 +523,12 @@ func tick() -> void:
 			if T[j] == "water" or T[j] == "sea" or T[j] == "wet":
 				fl.append(i); break
 	fl.shuffle()
-	for k in mini(5, fl.size()):
+	for k in mini(8, fl.size()):
 		set_type(fl[k], "water"); fx.emit("ring", fl[k], Color(.75, .9, 1))
 	if fl.size() and rng.randf() < .15: Sfx.play("water")
 	# deshielo natural
 	if CL.T > 1:
-		for k in 45:
+		for k in int(45 * AF):
 			var i := rng.randi() % (C * R)
 			if T[i] == "ice" and rng.randf() < minf(.5, CL.T * .03):
 				var ok := false
@@ -514,7 +537,7 @@ func tick() -> void:
 				if ok:
 					set_type(i, "dirt"); fx.emit("ring", i, Color(.92, .96, 1))
 	# propagación natural
-	for k in 68:
+	for k in int(68 * AF):
 		var i := rng.randi() % (C * R)
 		var g := T[i]
 		if not D.SPR.has(g):
@@ -531,7 +554,7 @@ func tick() -> void:
 			if T[j] == s[0] and (g == "water" or B[j] == ""): n.append(j)
 		if n.size(): grow(pickr(n), "grass" if g == "water" else g)
 	if not wx.on and rng.randf() < (.3 + CL.H / 100.0) / 300.0 and phase < 3:
-		wx.on = true; wx.until = gtime + 18 + rng.randf() * 12
+		wx.on = true; wx.until = gtime + 18 + rng.randf() * 12; _c("rain")
 		toast.emit("Empieza a nevar" if CL.T < 0 else "Empieza a llover: todo crece más rápido")
 	if wx.on and gtime > wx.until: wx.on = false
 	hud()
@@ -597,6 +620,7 @@ func hud() -> void:
 			save()
 		else:
 			start_leaving()
+	if started and not won: check_missions(s)
 	hud_changed.emit()
 
 # ---------------------------------------------------------------- fauna
@@ -706,6 +730,8 @@ func finish() -> void:
 	var m := maxi(1, roundi(play_s / 60.0))
 	var first: bool = not prog.done.has(region_id)
 	prog.done[region_id] = mini(int(prog.done[region_id]), m) if prog.done.has(region_id) else m
+	if not prog.has("mis"): prog.mis = {}
+	prog.mis[region_id] = maxi(int(prog.mis.get(region_id, 0)), mis_done.size())
 	_save_prog()
 	var ni := D.RORDER.find(region_id) + 1
 	var nx: String = D.RORDER[ni] if ni < D.RORDER.size() else ""
@@ -731,9 +757,10 @@ func new_game(id: String) -> void:
 		if a.begins_with("--seed="):
 			seed_v = int(a.split("=")[1]); rng.seed = seed_v
 	gen(seed_v)
-	leaves = 90; phase = 1; b3 = 0; gtime = D.DAY * .06
+	leaves = 130; phase = 1; b3 = 0; gtime = D.DAY * .06
 	seen = {}; scanned = {}; known = {}
 	for t in T: known[t] = true
+	cnt = {}; mis_done = {}
 	play_s = 0; reset_run()
 	tool_id = "geo" if id == "volcan" else "tur"
 	compute_power(); dirty = true
@@ -754,7 +781,7 @@ func snap() -> Dictionary:
 	for i in C * R:
 		ts += char(97 + D.TY.find(T[i])); bs += char(97 + D.BL.find(B[i]))
 	return {"v":3,"ts":Time.get_unix_time_from_system(),"region":region_id,"seed":seed_v,"leaves":leaves,"phase":phase,"b3":b3,
-		"gt":roundi(gtime),"seen":seen.keys(),"sc":scanned.keys(),"kn":known.keys(),"ms":roundi(play_s * 1000),"t":ts,"b":bs}
+		"gt":roundi(gtime),"seen":seen.keys(),"sc":scanned.keys(),"kn":known.keys(),"ms":roundi(play_s * 1000),"t":ts,"b":bs,"mis":mis_done.keys(),"cnt":cnt}
 
 func valid(s) -> bool:
 	return s is Dictionary and int(s.get("v", 0)) == 3 and D.REGIONS.has(s.get("region", "")) and str(s.get("t", "")).length() == C * R
@@ -773,6 +800,9 @@ func restore(s: Dictionary) -> void:
 	for k in s.get("seen", []): seen[k] = true
 	for k in s.get("sc", []): scanned[k] = true
 	for k in s.get("kn", []): known[k] = true
+	mis_done = {}
+	for k in s.get("mis", []): mis_done[k] = true
+	cnt = s.get("cnt", {}).duplicate()
 	for t in T: known[t] = true
 	play_s = float(s.get("ms", 0)) / 1000.0
 	reset_run()
@@ -812,3 +842,65 @@ func _load_prog() -> void:
 func unlocked(id: String) -> bool:
 	var i := D.RORDER.find(id)
 	return i == 0 or prog.done.has(D.RORDER[i - 1])
+
+# ---------------------------------------------------------------- misiones
+func _c(k: String, n := 1) -> void:
+	cnt[k] = int(cnt.get(k, 0)) + n
+
+func missions_for_region(id := "") -> Array:
+	if id == "": id = region_id
+	var o := []
+	for m in D.MISSIONS:
+		if not m.has("reg") or id in m.reg: o.append(m)
+	return o
+
+func mis_value(m: Dictionary, s: Dictionary) -> float:
+	var k: String = m.k
+	if k.begins_with("b_") or k in ["clean", "oil", "melt", "grass", "fill", "can", "man", "rec", "rain"]:
+		return float(cnt.get(k, 0))
+	if k.begins_with("sp_"): return 1.0 if seen.has(k.substr(3)) else 0.0
+	match k:
+		"forest", "flower", "wet", "mang", "water": return float(s.get(k, 0))
+		"green": return 100.0 * s.green / s.land
+		"species": return float(seen.size())
+		"animals": return float(anim.size())
+		"days": return float(int(gtime / D.DAY) + 1)
+		"T_hi": return CL.T
+		"T_lo": return CL.T
+		"H": return CL.H
+		"pow_asp":
+			var n := 0
+			for i in C * R:
+				if B[i] == "asp" and POW.size() and POW[i]: n += 1
+			return float(n)
+	return 0.0
+
+func mis_ok(m: Dictionary, v: float) -> bool:
+	return v <= m.g if m.k == "T_lo" else v >= m.g
+
+func mis_text(m: Dictionary, v: float) -> String:
+	if m.k == "T_lo" or m.k == "T_hi": return "%d °C" % roundi(v)
+	if m.k == "H": return "%d%%" % roundi(v)
+	if m.k == "green": return "%d/%d%%" % [mini(roundi(v), m.g), m.g]
+	if m.g == 1: return "pendiente"
+	return "%d/%d" % [mini(int(v), m.g), m.g]
+
+func active_missions(nmax := 3) -> Array:
+	var o := []
+	for m in missions_for_region():
+		if mis_done.has(m.id): continue
+		if int(m.get("ph", 1)) > phase: continue
+		o.append(m)
+		if o.size() >= nmax: break
+	return o
+
+func check_missions(s: Dictionary) -> void:
+	for m in missions_for_region():
+		if mis_done.has(m.id) or int(m.get("ph", 1)) > phase: continue
+		if mis_ok(m, mis_value(m, s)):
+			mis_done[m.id] = true
+			leaves += int(m.r)
+			toast.emit("Misión cumplida: %s  ·  +%d hojas" % [m.n, m.r])
+			Sfx.play("found")
+			dirty = true
+			missions_changed.emit()

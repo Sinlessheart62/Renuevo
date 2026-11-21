@@ -1,10 +1,11 @@
 extends Node
 ## Datos fijos del juego: terrenos, herramientas, regiones y especies.
 
-const C := 30
-const R := 30
+const C := 44
+const R := 44
 const MAXH := 5
 const DAY := 300.0
+const AFW := float(C * R) / 900.0   # más fauna en mapas grandes
 const HS := 0.42          # altura de un escalón de terreno (unidades de mundo)
 
 const TY := ["tox","dirt","grass","forest","water","wet","flower","rock","mnt","sea","sand","mang","ash","ice","lava","oil","bed"]
@@ -116,26 +117,26 @@ const PHN := ["","Sanar el suelo","Devolver la vida","Registrar y partir"]
 func want(k: String, s: Dictionary) -> int:
 	var gl: float = s.green + s.flower
 	match k:
-		"deer": return mini(8, s.forest / 8)
-		"rabbit": return mini(6, (s.grass + s.flower) / 25)
-		"heron": return mini(6, s.wet / 4)
-		"duck": return mini(6, s.water / 6)
-		"bee": return mini(10, s.flower / 5)
-		"butterfly": return mini(8, s.flower / 7)
-		"parrot": return mini(8, s.forest / 6)
-		"turtle": return mini(5, s.mang / 4)
-		"reindeer": return mini(6, s.forest / 7)
-		"fox": return mini(4, (s.grass + s.flower) / 22)
-		"hare": return mini(6, (s.grass + s.flower) / 18)
-		"seal": return mini(4, s.green / 35)
-		"goat": return mini(6, (s.grass + s.flower) / 20)
-		"lizard": return mini(6, s.green / 25)
-		"beaver": return mini(3, s.water / 6) if s.forest >= 6 else 0
-		"frog": return mini(6, s.wet / 3)
-		"bear": return mini(2, s.forest / 20) if (s.forest >= 20 and s.flower >= 8) else 0
-		"flamingo": return mini(6, (s.wet + s.mang) / 6)
-		"manta": return mini(3, s.mang / 6)
-		"wolf": return mini(3, maxi(0, s.get("reindeer", 0) - 1))
+		"deer": return mini(int(8 * AFW), s.forest / 8)
+		"rabbit": return mini(int(6 * AFW), (s.grass + s.flower) / 25)
+		"heron": return mini(int(6 * AFW), s.wet / 4)
+		"duck": return mini(int(6 * AFW), s.water / 6)
+		"bee": return mini(int(10 * AFW), s.flower / 5)
+		"butterfly": return mini(int(8 * AFW), s.flower / 7)
+		"parrot": return mini(int(8 * AFW), s.forest / 6)
+		"turtle": return mini(int(5 * AFW), s.mang / 4)
+		"reindeer": return mini(int(6 * AFW), s.forest / 7)
+		"fox": return mini(int(4 * AFW), (s.grass + s.flower) / 22)
+		"hare": return mini(int(6 * AFW), (s.grass + s.flower) / 18)
+		"seal": return mini(int(4 * AFW), s.green / 35)
+		"goat": return mini(int(6 * AFW), (s.grass + s.flower) / 20)
+		"lizard": return mini(int(6 * AFW), s.green / 25)
+		"beaver": return mini(int(3 * AFW), s.water / 6) if s.forest >= 6 else 0
+		"frog": return mini(int(6 * AFW), s.wet / 3)
+		"bear": return mini(int(2 * AFW), s.forest / 20) if (s.forest >= 20 and s.flower >= 8) else 0
+		"flamingo": return mini(int(6 * AFW), (s.wet + s.mang) / 6)
+		"manta": return mini(int(3 * AFW), s.mang / 6)
+		"wolf": return mini(int(3 * AFW), maxi(0, s.get("reindeer", 0) - 1))
 		"whale":
 			var r: float = float(s.green) / s.land
 			return (2 if r > .6 else 1) if r > .4 else 0
@@ -151,3 +152,34 @@ func tname(t: Dictionary, reg: Dictionary) -> String:
 
 func ty(i: int) -> String:
 	return TY[i]
+
+## Misiones secundarias: k = métrica, g = meta, r = recompensa en hojas, ph = fase mínima, reg = regiones
+const MISSIONS := [
+	{"id":"tur3","n":"Levanta 3 turbinas","k":"b_tur","g":3,"r":8},
+	{"id":"geo3","n":"Construye 3 plantas geotérmicas","k":"b_geo","g":3,"r":15,"reg":["volcan"]},
+	{"id":"dep5","n":"Construye 5 depuradores","k":"b_dep","g":5,"r":12},
+	{"id":"clean60","n":"Limpia 60 casillas contaminadas","k":"clean","g":60,"r":15},
+	{"id":"oil40","n":"Limpia 40 casillas de petróleo","k":"oil","g":40,"r":20,"reg":["tropico"]},
+	{"id":"melt150","n":"Derrite 150 casillas de hielo","k":"melt","g":150,"r":20,"reg":["polar"]},
+	{"id":"grass80","n":"Haz crecer 80 casillas de pasto","k":"grass","g":80,"r":15},
+	{"id":"can8","n":"Excava 8 canales","k":"can","g":8,"r":10},
+	{"id":"fill15","n":"Llena de agua 15 casillas de cauce","k":"fill","g":15,"r":12},
+	{"id":"asp6","n":"Ten 6 aspersores con energía a la vez","k":"pow_asp","g":6,"r":15},
+	{"id":"rain2","n":"Vive 2 lluvias","k":"rain","g":2,"r":10},
+	{"id":"green25","n":"Reverdece el 25% de la tierra","k":"green","g":25,"r":15},
+	{"id":"warm5","n":"Sube la temperatura a 5 °C","k":"T_hi","g":5,"r":15,"reg":["polar"]},
+	{"id":"cool26","n":"Baja la temperatura a 26 °C","k":"T_lo","g":26,"r":15,"reg":["tropico"]},
+	{"id":"hum45","n":"Sube la humedad al 45%","k":"H","g":45,"r":15,"reg":["volcan"]},
+	{"id":"day3","n":"Llega al día 3","k":"days","g":3,"r":10},
+	{"id":"forest40","n":"Haz crecer 40 casillas de bosque","k":"forest","g":40,"r":20,"ph":2},
+	{"id":"flower25","n":"Siembra 25 casillas de flores","k":"flower","g":25,"r":20,"ph":2},
+	{"id":"wet15","n":"Crea 15 casillas de humedal","k":"wet","g":15,"r":20,"ph":2,"reg":["valle","tropico","polar","volcan"]},
+	{"id":"col3","n":"Instala 3 colmenas","k":"b_col","g":3,"r":12,"ph":2},
+	{"id":"man8","n":"Planta 8 manglares","k":"man","g":8,"r":15,"ph":2,"reg":["valle","tropico"]},
+	{"id":"sp4","n":"Descubre 4 especies","k":"species","g":4,"r":20},
+	{"id":"bear","n":"Atrae al oso al bosque","k":"sp_bear","g":1,"r":25,"reg":["valle"]},
+	{"id":"whale","n":"Avista la ballena","k":"sp_whale","g":1,"r":25,"reg":["polar"]},
+	{"id":"manta","n":"Avista la mantarraya","k":"sp_manta","g":1,"r":25,"reg":["tropico"]},
+	{"id":"goat","n":"Atrae a la cabra montés","k":"sp_goat","g":1,"r":25,"reg":["volcan"]},
+	{"id":"anim25","n":"Ten 25 animales en la parcela","k":"animals","g":25,"r":25},
+	{"id":"rec15","n":"Recicla 15 edificios","k":"rec","g":15,"r":20,"ph":3}]

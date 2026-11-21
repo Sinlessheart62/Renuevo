@@ -30,6 +30,9 @@ var pct_l: Label
 var phase_l: Label
 var phase_n: Label
 var goals_box: VBoxContainer
+var mis_box: VBoxContainer
+var mis_count: Label
+var mis_panel: PanelContainer
 var leaves_l: Label
 var clim_box: HBoxContainer
 var time_l: Label
@@ -185,6 +188,17 @@ func _build_hud() -> void:
 	phase_l = _lbl("Fase 1", 15, F600, GREEN); hh.add_child(phase_l)
 	phase_n = _lbl("Sanar el suelo", 24, SERIFB); v.add_child(phase_n)
 	goals_box = VBoxContainer.new(); goals_box.add_theme_constant_override("separation", 3); v.add_child(goals_box)
+	# — misiones activas (izquierda, debajo de la fase)
+	mis_panel = _panel(.92)
+	mis_panel.position = Vector2(18, 0)
+	hud.add_child(mis_panel)
+	var mv := VBoxContainer.new(); mv.add_theme_constant_override("separation", 2); mis_panel.add_child(mv)
+	var mh := HBoxContainer.new(); mv.add_child(mh)
+	mh.add_child(_lbl("MISIONES", 16, SERIFB, Color("#7a5634")))
+	var msp := Control.new(); msp.size_flags_horizontal = Control.SIZE_EXPAND_FILL; mh.add_child(msp)
+	mis_count = _lbl("", 14, F500, INK2); mh.add_child(mis_count)
+	mis_box = VBoxContainer.new(); mis_box.add_theme_constant_override("separation", 1); mv.add_child(mis_box)
+	tl.resized.connect(func(): mis_panel.position.y = tl.position.y + tl.size.y + 10)
 	# — recursos y clima (arriba derecha)
 	var tr := _panel(.94)
 	tr.set_anchors_preset(Control.PRESET_TOP_RIGHT)
@@ -314,6 +328,7 @@ func refresh() -> void:
 		row.add_child(_lbl(vt, 14, F500, INK2))
 		goals_box.add_child(row)
 	leaves_l.text = str(Game.leaves)
+	_refresh_missions()
 	for c in clim_box.get_children(): c.queue_free()
 	var CL: Dictionary = Game.CL
 	var chips := [["t", "%d °C" % roundi(CL.T), CL.T < 0 or CL.T > 28, "Temperatura"], ["h", "%d%%" % roundi(CL.H), CL.H < 40, "Humedad"], ["f", "%d%%" % roundi(CL.F), CL.F < 30, "Fertilidad"]]
@@ -452,7 +467,7 @@ func _build_journal() -> void:
 	top.add_child(_btn("Cerrar  ✕", func(): toggle_journal()))
 	j_tabs = TabContainer.new(); j_tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(j_tabs)
-	for name in ["Objetivos", "Ecosistemas", "Fauna", "Edificios"]:
+	for name in ["Objetivos", "Misiones", "Ecosistemas", "Fauna", "Edificios"]:
 		var sc := ScrollContainer.new(); sc.name = name
 		sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		var rt := RichTextLabel.new(); rt.name = "t"; rt.bbcode_enabled = true; rt.fit_content = true
@@ -485,6 +500,17 @@ func _fill_journal() -> void:
 	t += "[b]Clima actual[/b]\n    Temperatura %d °C · Humedad %d%% · Fertilidad %d%%\n" % [roundi(Game.CL.T), roundi(Game.CL.H), roundi(Game.CL.F)]
 	t += "    [color=#7a6b55]Los espejos solares calientan, los enfriadores enfrían y las torres de nubes humedecen (todos necesitan energía). El agua y el verde suben la humedad; el verde y la limpieza suben la fertilidad.[/color]\n"
 	_set_tab("Objetivos", t)
+	var all: Array = Game.missions_for_region()
+	t = "[color=#7a5634]Misiones opcionales de esta región: dan hojas extra al cumplirse. Las que piden fase 2 o 3 se activan al llegar a esa fase.[/color]\n\n"
+	t += "[b]Cumplidas: %d de %d[/b]\n\n" % [Game.mis_done.size(), all.size()]
+	for m in all:
+		var done: bool = Game.mis_done.has(m.id)
+		var ph: int = int(m.get("ph", 1))
+		var v: float = Game.mis_value(m, s)
+		if done: t += "[color=#4f7a26]✓ %s[/color]  [color=#7a5634]+%d hojas[/color]\n" % [m.n, m.r]
+		elif ph > Game.phase: t += "[color=#a8906c]○ %s  — fase %d[/color]\n" % [m.n, ph]
+		else: t += "• %s  [color=#7a5634]%s · +%d hojas[/color]\n" % [m.n, Game.mis_text(m, v), m.r]
+	_set_tab("Misiones", t)
 	t = "[color=#7a6b55]Cada ecosistema necesita un clima concreto. Los que ya viste aparecen con su descripción.[/color]\n\n"
 	for ty in D.TY:
 		var k: bool = Game.known.has(ty)
@@ -616,6 +642,9 @@ func open_regions() -> void:
 		cv.add_child(_lbl(st, 13, F500, INK2))
 		var done: bool = Game.prog.done.has(id)
 		if done: cv.add_child(_lbl("✓ Restaurada en %d min" % int(Game.prog.done[id]), 15, F600, GREEN))
+		var mtot: int = Game.missions_for_region(id).size()
+		var mbest: int = int(Game.prog.get("mis", {}).get(id, 0))
+		cv.add_child(_lbl("Misiones: %d/%d" % [mbest, mtot], 15, F600, INK2))
 		var sp := Control.new(); sp.size_flags_vertical = Control.SIZE_EXPAND_FILL; cv.add_child(sp)
 		if ok:
 			var rid: String = id
@@ -699,3 +728,23 @@ func make_thumbs_2d(board: Node) -> void:
 			at.atlas = board.tex[name]
 			at.region = Rect2(0, 0, info.w, info.h)
 		thumbs[t.id] = at
+
+func _refresh_missions() -> void:
+	for c in mis_box.get_children():
+		mis_box.remove_child(c); c.queue_free()
+	var all: Array = Game.missions_for_region()
+	mis_count.text = "%d/%d" % [Game.mis_done.size(), all.size()]
+	var act: Array = Game.active_missions(3)
+	var s: Dictionary = Game.last_stats if Game.last_stats.size() else Game.stats()
+	if act.is_empty():
+		mis_box.add_child(_lbl("Sin misiones pendientes en esta fase", 15, F500, INK2))
+	for m in act:
+		var row := HBoxContainer.new(); row.add_theme_constant_override("separation", 8)
+		var v: float = Game.mis_value(m, s)
+		var nl := _lbl("• " + m.n, 15, F500)
+		nl.custom_minimum_size.x = 300
+		row.add_child(nl)
+		row.add_child(_lbl(Game.mis_text(m, v), 15, F600, INK2))
+		row.add_child(_lbl("+%d" % m.r, 15, F600, GREEN))
+		mis_box.add_child(row)
+	mis_panel.set_deferred("size", Vector2.ZERO)

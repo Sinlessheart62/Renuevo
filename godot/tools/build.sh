@@ -22,6 +22,8 @@ Controles
 - 1–9 y 0: herramientas · B: bitácora · M: sonido · G: efectos visuales
 - H: ocultar interfaz (para capturas) · F11: pantalla completa · Esc: pausa
 
+Árboles, arbustos, flores, helechos y rocas: Stylized Nature MegaKit de Quaternius (CC0, dominio público).
+
 Las partidas se guardan solas en:
 %APPDATA%\Renuevo
 T

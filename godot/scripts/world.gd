@@ -35,6 +35,9 @@ var grass_chunks: Array[MultiMeshInstance3D] = []
 var grass_dirty := {}
 var veg_variants := {}   # nombre -> {mesh, mmi}
 var veg_dirty := false
+var kit_pre := {}        # transformación base de cada modelo del kit
+var kit_mats: Array[ShaderMaterial] = []
+var kit_leaf_mats: Array[ShaderMaterial] = []
 var tile_objs := []      # por casilla: lista de [variante, Transform3D, fase]
 var height_dirty := false
 var water_dirty := false
@@ -206,6 +209,7 @@ func _make_nodes() -> void:
 		"rock0":Geo.boulder(26),"rock1":Geo.boulder(27),"rock2":Geo.boulder(28),
 		"drock0":Geo.boulder(29, Color("#5d5550")),"drock1":Geo.boulder(30, Color("#6b625a")),
 		"flower":Geo.flower_head()}
+	_load_kit()
 	for k in defs:
 		var mmi := MultiMeshInstance3D.new()
 		var mm := MultiMesh.new()
@@ -498,23 +502,42 @@ func _gen_objs(i: int) -> void:
 		var bs := Basis(Vector3.UP, r.randf() * TAU).scaled(Vector3(sc, sc, sc))
 		o.append([v, Transform3D(bs, Vector3(x, y, z)), r.randf()])
 	var reg: String = G.region_id
+	var kit: bool = K("k_CommonTree_1")
 	match t:
 		"forest":
-			var n := 2 + (1 if r.randf() < .6 else 0) + (1 if r.randf() < .3 else 0)
+			var n := 1 + (1 if r.randf() < .6 else 0) + (1 if r.randf() < .25 else 0)
 			for k in n:
 				var v := r.randi() % 3
 				var kind := ""
-				if reg == "tropico": kind = ("palm%d" % v) if r.randf() < .45 else ("jungle%d" % (v % 2))
-				elif reg == "polar": kind = "spruce%d" % v
-				else: kind = ("pine%d" % v) if r.randf() < .55 else ("broad%d" % v)
-				add.call(kind, .14, 1.0)
-			if r.randf() < .6: add.call("bush%d" % (r.randi() % 2), .1, 1.0)
+				var q := r.randf()
+				if reg == "tropico":
+					kind = ("palm%d" % v) if q < .4 else (("k_CommonTree_%d" % (1 + r.randi() % 5)) if kit else ("jungle%d" % (v % 2)))
+				elif reg == "polar": kind = ("k_Pine_%d" % (1 + r.randi() % 5)) if kit else "spruce%d" % v
+				elif kit:
+					if q < .4: kind = "k_Pine_%d" % (1 + r.randi() % 5)
+					elif q < .46: kind = "k_TwistedTree_%d" % (1 if r.randf() < .5 else 3)
+					else: kind = "k_CommonTree_%d" % (1 + r.randi() % 5)
+				else: kind = ("pine%d" % v) if q < .55 else ("broad%d" % v)
+				add.call(kind, .16, 1.0)
+			if r.randf() < .5: add.call(("k_Bush_Common" if kit else "bush%d" % (r.randi() % 2)), .1, 1.0)
+			if kit and r.randf() < .45: add.call("k_Fern_1", .1, 1.0)
+			if kit and r.randf() < .15 and reg != "polar": add.call("k_Mushroom_Common", .15, 1.0)
 		"flower":
-			for k in 1 + (1 if r.randf() < .5 else 0): add.call("fbush%d" % (r.randi() % 3), .12, 1.0)
+			if kit:
+				add.call("k_Bush_Common_Flowers", .14, 1.0)
+				for k in 1 + r.randi() % 2: add.call("k_Flower_%d_Group" % (3 if r.randf() < .5 else 4), .1, 1.0)
+			else:
+				for k in 1 + (1 if r.randf() < .5 else 0): add.call("fbush%d" % (r.randi() % 3), .12, 1.0)
 		"grass":
-			if r.randf() < .16: add.call("bush%d" % (r.randi() % 2), .15, .9)
+			if r.randf() < .16: add.call(("k_Bush_Common" if kit else "bush%d" % (r.randi() % 2)), .15, .9)
+			if kit:
+				for k in r.randi() % 3: add.call(("k_Grass_Common_Tall" if r.randf() < .6 else "k_Grass_Wispy_Tall"), .08, 1.0)
+				if r.randf() < .25: add.call("k_Clover_1", .1, 1.0)
+				if r.randf() < .08: add.call("k_Fern_1", .1, 1.0)
+				if r.randf() < .06: add.call("k_Pebble_Round_%d" % (1 if r.randf() < .5 else 3), .1, 1.0)
 		"wet":
 			add.call("reed%d" % (r.randi() % 2), .15, 1.0)
+			if kit and r.randf() < .4: add.call("k_Plant_7_Big", .15, 1.0)
 			if r.randf() < .6: add.call("reed%d" % (r.randi() % 2), .15, 1.0)
 		"mang":
 			add.call("mang%d" % (r.randi() % 2), .22, 1.0)
@@ -522,10 +545,11 @@ func _gen_objs(i: int) -> void:
 		"sand":
 			if reg == "tropico" and r.randf() < .14: add.call("palm%d" % (r.randi() % 3), .3, 1.0)
 		"tox", "dirt", "ash", "ice":
-			if r.randf() < .07: add.call("dead%d" % (r.randi() % 2), .3, 1.0)
-			if r.randf() < .12: add.call("rock%d" % (r.randi() % 3), .2, .6)
+			if r.randf() < .07: add.call((("k_DeadTree_%d" % [1, 3, 5][r.randi() % 3]) if kit else "dead%d" % (r.randi() % 2)), .3, 1.0)
+			if r.randf() < .12: add.call((("k_Rock_Medium_%d" % (1 + r.randi() % 3)) if kit and reg != "volcan" else "rock%d" % (r.randi() % 3)), .2, .6)
 		"rock":
-			for k in 1 + r.randi() % 2: add.call("rock%d" % (r.randi() % 3), .15, 1.1)
+			for k in 1 + r.randi() % 2: add.call((("k_Rock_Medium_%d" % (1 + r.randi() % 3)) if kit and reg != "volcan" else "rock%d" % (r.randi() % 3)), .15, 1.1)
+			if kit and r.randf() < .3: add.call("k_Pebble_Round_1", .1, 1.0)
 		"mnt":
 			if r.randf() < .35: add.call("drock%d" % (r.randi() % 2), .2, 1.2)
 		"bed":
@@ -554,7 +578,7 @@ func _build_veg() -> void:
 		mm.instance_count = L.size()
 		for n in L.size():
 			var o: Array = L[n][0]; var i: int = L[n][1]
-			mm.set_instance_transform(n, o[1])
+			mm.set_instance_transform(n, (o[1] * kit_pre[k]) if kit_pre.has(k) else o[1])
 			var bt: float = G.born[i]
 			mm.set_instance_custom_data(n, Color(bt + o[2] * .6 if bt > -50 else -100.0, o[2], 0, 0))
 			if mm.use_colors: mm.set_instance_color(n, o[3])
@@ -613,6 +637,7 @@ func rebuild_all() -> void:
 	var sea: Variant = G.REG.sea
 	if sea != null: water_mat.set_shader_parameter("sea_col", sea)
 	veg_mat.set_shader_parameter("snow", .35 if G.region_id == "polar" else 0.0)
+	for m in kit_leaf_mats: m.set_shader_parameter("snow", .55 if G.region_id == "polar" else 0.0)
 	_build_terrain()
 	_build_water()
 	for i in C * R: _gen_objs(i)
@@ -824,5 +849,78 @@ func _update_sky(dt: float) -> void:
 	snow_p.emitting = rain > .25 and cold and G.started
 	var wind := 1.0 + rain * 1.5
 	veg_mat.set_shader_parameter("wind", wind); grass_mat.set_shader_parameter("wind", wind)
+	for m in kit_mats: m.set_shader_parameter("wind", wind)
 	fireflies.emitting = night > .6 and G.last_stats.size() and G.last_stats.green > 30 and not cold
 	for b in bnodes.values(): factory.night_lights(b, night)
+
+# ======================================================================= Stylized Nature MegaKit (Quaternius, CC0)
+const KIT := {
+	"CommonTree_1": 1.3, "CommonTree_2": 1.25, "CommonTree_3": 1.15, "CommonTree_4": 1.2, "CommonTree_5": 1.1,
+	"Pine_1": 1.35, "Pine_2": 1.3, "Pine_3": 1.4, "Pine_4": 1.25, "Pine_5": 1.1,
+	"TwistedTree_1": 1.25, "TwistedTree_3": 1.2, "DeadTree_1": .9, "DeadTree_3": .85, "DeadTree_5": .85,
+	"Bush_Common": .33, "Bush_Common_Flowers": .34, "Fern_1": .26, "Flower_3_Group": .2, "Flower_4_Group": .21,
+	"Grass_Common_Tall": .2, "Grass_Wispy_Tall": .22, "Clover_1": .06, "Mushroom_Common": .11,
+	"Rock_Medium_1": .34, "Rock_Medium_2": .3, "Rock_Medium_3": .36, "Pebble_Round_1": .06, "Pebble_Round_3": .06,
+	"Plant_1_Big": .24, "Plant_7_Big": .24}
+var kit_shader: Shader = preload("res://shaders/kit.gdshader")
+
+func _load_kit() -> void:
+	for nm in KIT:
+		var path := "res://kit/%s.gltf" % nm
+		if not ResourceLoader.exists(path): continue
+		var sc: PackedScene = load(path)
+		if sc == null: continue
+		var root := sc.instantiate()
+		var mis := root.find_children("*", "MeshInstance3D", true, false)
+		if mis.is_empty():
+			root.free(); continue
+		var mi: MeshInstance3D = mis[0]
+		var mesh: Mesh = mi.mesh
+		var xf := Transform3D()
+		var n: Node = mi
+		while n != root and n is Node3D:
+			xf = (n as Node3D).transform * xf
+			n = n.get_parent()
+		var ab: AABB = xf * mesh.get_aabb()
+		var hgt: float = maxf(ab.size.y, .001)
+		var sc_f: float = KIT[nm] / hgt
+		var c := ab.get_center()
+		var pre := Transform3D(Basis().scaled(Vector3.ONE * sc_f), Vector3(-c.x * sc_f, -ab.position.y * sc_f, -c.z * sc_f)) * xf
+		var is_tree: bool = nm.contains("Tree") or nm.begins_with("Pine")
+		for si in mesh.get_surface_count():
+			var src := mesh.surface_get_material(si)
+			if src == null and mi.get_surface_override_material(si): src = mi.get_surface_override_material(si)
+			var m := ShaderMaterial.new(); m.shader = kit_shader
+			var leafy := false
+			if src is BaseMaterial3D:
+				var bm := src as BaseMaterial3D
+				m.set_shader_parameter("albedo_tex", bm.albedo_texture)
+				m.set_shader_parameter("base_col", bm.albedo_color)
+				m.set_shader_parameter("use_vcol", 1.0 if bm.vertex_color_use_as_albedo else 0.0)
+				if bm.albedo_texture and bm.albedo_texture.resource_path.contains("TwistedTree_C"):
+					m.set_shader_parameter("mask_mode", 1.0)
+					m.set_shader_parameter("mask_col", Color("#e8a23a") if nm.begins_with("Twisted") else Color("#5a9a38"))
+				m.set_shader_parameter("cutoff", .3 if bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED else -1.0)
+				leafy = bm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or bm.resource_name.contains("Lea") or bm.resource_name.contains("Grass") or bm.resource_name.contains("Flower")
+			m.set_shader_parameter("model_h", hgt)
+			m.set_shader_parameter("sway", (.035 if is_tree else .09) if leafy else (.012 if is_tree else 0.0))
+			if leafy: m.set_shader_parameter("toon_soft", .14)
+			else: m.set_shader_parameter("toon_soft", .1)
+			m.set_shader_parameter("rim_amt", .3 if leafy else .1)
+			mesh.surface_set_material(si, m)
+			kit_mats.append(m); mats_now.append(m)
+			if leafy and is_tree: kit_leaf_mats.append(m)
+		kit_pre["k_" + nm] = pre
+		var mmi := MultiMeshInstance3D.new()
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.use_custom_data = true
+		mm.mesh = mesh
+		mmi.multimesh = mm
+		if KIT[nm] < .1 or nm.begins_with("Grass") or nm.begins_with("Clover"): mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(mmi)
+		veg_variants["k_" + nm] = mmi
+		root.free()
+
+func K(nm: String) -> bool:
+	return veg_variants.has(nm)

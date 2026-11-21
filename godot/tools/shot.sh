@@ -1,6 +1,6 @@
 #!/bin/bash
 # Ejecuta el juego con Vulkan por software en una pantalla virtual. Args extra = args del juego.
-cd /home/claude/gd/renuevo
+cd /home/claude/gd/${PROJ:-renuevo}
 G=/tmp/godot/Godot_v4.3-stable_linux.x86_64
 export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json
 W=${W:-1600}; H=${H:-900}

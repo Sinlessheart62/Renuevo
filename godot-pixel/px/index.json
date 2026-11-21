@@ -1,0 +1,541 @@
+{
+ "tile": 16,
+ "sprites": {
+  "broad0": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "broad1": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "broad2": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "jungle0": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "jungle1": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "pine0": {
+   "w": 18,
+   "h": 32,
+   "frames": 1,
+   "ox": 9,
+   "oy": 30
+  },
+  "pine1": {
+   "w": 18,
+   "h": 32,
+   "frames": 1,
+   "ox": 9,
+   "oy": 30
+  },
+  "pine2": {
+   "w": 18,
+   "h": 32,
+   "frames": 1,
+   "ox": 9,
+   "oy": 30
+  },
+  "spruce0": {
+   "w": 18,
+   "h": 32,
+   "frames": 1,
+   "ox": 9,
+   "oy": 30
+  },
+  "spruce1": {
+   "w": 18,
+   "h": 32,
+   "frames": 1,
+   "ox": 9,
+   "oy": 30
+  },
+  "palm0": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "palm1": {
+   "w": 26,
+   "h": 32,
+   "frames": 1,
+   "ox": 13,
+   "oy": 30
+  },
+  "bush0": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "bush1": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "fbush0": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "fbush1": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "fbush2": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "rock0": {
+   "w": 14,
+   "h": 12,
+   "frames": 1,
+   "ox": 7,
+   "oy": 10
+  },
+  "rock1": {
+   "w": 14,
+   "h": 12,
+   "frames": 1,
+   "ox": 7,
+   "oy": 10
+  },
+  "rock2": {
+   "w": 14,
+   "h": 12,
+   "frames": 1,
+   "ox": 7,
+   "oy": 10
+  },
+  "dead0": {
+   "w": 14,
+   "h": 20,
+   "frames": 1,
+   "ox": 7,
+   "oy": 18
+  },
+  "dead1": {
+   "w": 14,
+   "h": 20,
+   "frames": 1,
+   "ox": 7,
+   "oy": 18
+  },
+  "reed0": {
+   "w": 14,
+   "h": 16,
+   "frames": 1,
+   "ox": 7,
+   "oy": 14
+  },
+  "reed1": {
+   "w": 14,
+   "h": 16,
+   "frames": 1,
+   "ox": 7,
+   "oy": 14
+  },
+  "mang0": {
+   "w": 22,
+   "h": 24,
+   "frames": 1,
+   "ox": 11,
+   "oy": 22
+  },
+  "peak0": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "peak1": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "peaksnow0": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "peaksnow1": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "peakdark0": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "peakdark1": {
+   "w": 20,
+   "h": 22,
+   "frames": 1,
+   "ox": 10,
+   "oy": 20
+  },
+  "b_tur": {
+   "w": 26,
+   "h": 40,
+   "frames": 4,
+   "ox": 13,
+   "oy": 38
+  },
+  "b_geo": {
+   "w": 26,
+   "h": 26,
+   "frames": 1,
+   "ox": 13,
+   "oy": 24
+  },
+  "b_dep": {
+   "w": 20,
+   "h": 24,
+   "frames": 2,
+   "ox": 10,
+   "oy": 22
+  },
+  "b_asp": {
+   "w": 26,
+   "h": 24,
+   "frames": 4,
+   "ox": 13,
+   "oy": 22
+  },
+  "b_pum": {
+   "w": 20,
+   "h": 20,
+   "frames": 2,
+   "ox": 10,
+   "oy": 18
+  },
+  "b_sol": {
+   "w": 20,
+   "h": 20,
+   "frames": 4,
+   "ox": 10,
+   "oy": 18
+  },
+  "b_nub": {
+   "w": 14,
+   "h": 36,
+   "frames": 1,
+   "ox": 7,
+   "oy": 34
+  },
+  "b_fri": {
+   "w": 20,
+   "h": 20,
+   "frames": 2,
+   "ox": 10,
+   "oy": 18
+  },
+  "b_viv": {
+   "w": 26,
+   "h": 20,
+   "frames": 1,
+   "ox": 13,
+   "oy": 18
+  },
+  "b_col": {
+   "w": 20,
+   "h": 20,
+   "frames": 4,
+   "ox": 10,
+   "oy": 18
+  },
+  "b_hid": {
+   "w": 26,
+   "h": 22,
+   "frames": 4,
+   "ox": 13,
+   "oy": 20
+  },
+  "b_obs": {
+   "w": 22,
+   "h": 24,
+   "frames": 3,
+   "ox": 11,
+   "oy": 22
+  },
+  "a_deer": {
+   "w": 18,
+   "h": 17,
+   "frames": 4,
+   "ox": 9,
+   "oy": 15
+  },
+  "a_reindeer": {
+   "w": 19,
+   "h": 17,
+   "frames": 4,
+   "ox": 9,
+   "oy": 15
+  },
+  "a_goat": {
+   "w": 17,
+   "h": 16,
+   "frames": 4,
+   "ox": 8,
+   "oy": 14
+  },
+  "a_bear": {
+   "w": 20,
+   "h": 18,
+   "frames": 4,
+   "ox": 10,
+   "oy": 16
+  },
+  "a_wolf": {
+   "w": 18,
+   "h": 16,
+   "frames": 4,
+   "ox": 9,
+   "oy": 14
+  },
+  "a_fox": {
+   "w": 12,
+   "h": 10,
+   "frames": 4,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_rabbit": {
+   "w": 12,
+   "h": 10,
+   "frames": 4,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_hare": {
+   "w": 12,
+   "h": 10,
+   "frames": 4,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_frog": {
+   "w": 12,
+   "h": 10,
+   "frames": 4,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_lizard": {
+   "w": 12,
+   "h": 10,
+   "frames": 4,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_heron": {
+   "w": 12,
+   "h": 18,
+   "frames": 4,
+   "ox": 6,
+   "oy": 16
+  },
+  "a_flamingo": {
+   "w": 12,
+   "h": 18,
+   "frames": 4,
+   "ox": 6,
+   "oy": 16
+  },
+  "a_duck": {
+   "w": 14,
+   "h": 10,
+   "frames": 4,
+   "ox": 7,
+   "oy": 8
+  },
+  "a_seal": {
+   "w": 14,
+   "h": 10,
+   "frames": 4,
+   "ox": 7,
+   "oy": 8
+  },
+  "a_turtle": {
+   "w": 14,
+   "h": 10,
+   "frames": 4,
+   "ox": 7,
+   "oy": 8
+  },
+  "a_beaver": {
+   "w": 14,
+   "h": 10,
+   "frames": 4,
+   "ox": 7,
+   "oy": 8
+  },
+  "a_manta": {
+   "w": 18,
+   "h": 12,
+   "frames": 3,
+   "ox": 9,
+   "oy": 10
+  },
+  "a_whale": {
+   "w": 28,
+   "h": 16,
+   "frames": 3,
+   "ox": 14,
+   "oy": 14
+  },
+  "a_butterfly": {
+   "w": 10,
+   "h": 8,
+   "frames": 2,
+   "ox": 5,
+   "oy": 6
+  },
+  "a_bee": {
+   "w": 12,
+   "h": 10,
+   "frames": 2,
+   "ox": 6,
+   "oy": 8
+  },
+  "a_parrot": {
+   "w": 12,
+   "h": 10,
+   "frames": 2,
+   "ox": 6,
+   "oy": 8
+  },
+  "drone": {
+   "w": 16,
+   "h": 10,
+   "frames": 1,
+   "ox": 8,
+   "oy": 8
+  },
+  "airship": {
+   "w": 52,
+   "h": 34,
+   "frames": 1,
+   "ox": 26,
+   "oy": 32
+  },
+  "fence_h": {
+   "w": 16,
+   "h": 14,
+   "frames": 1,
+   "ox": 8,
+   "oy": 12
+  },
+  "fence_v": {
+   "w": 6,
+   "h": 18,
+   "frames": 1,
+   "ox": 3,
+   "oy": 16
+  }
+ },
+ "tiles": {
+  "kinds": [
+   "tox",
+   "dirt",
+   "grass",
+   "forest",
+   "water",
+   "marsh",
+   "flower",
+   "rock",
+   "mnt",
+   "sea",
+   "tsea",
+   "sand",
+   "ash",
+   "ice",
+   "lava",
+   "oil",
+   "bed"
+  ],
+  "cols": 80,
+  "kind_of": {
+   "tox": "tox",
+   "dirt": "dirt",
+   "grass": "grass",
+   "forest": "forest",
+   "water": "water",
+   "wet": "marsh",
+   "flower": "flower",
+   "rock": "rock",
+   "mnt": "mnt",
+   "sea": "sea",
+   "sand": "sand",
+   "mang": "marsh",
+   "ash": "ash",
+   "ice": "ice",
+   "lava": "lava",
+   "oil": "oil",
+   "bed": "bed"
+  },
+  "dirs": [
+   "n",
+   "e",
+   "s",
+   "w",
+   "ne",
+   "se",
+   "sw",
+   "nw"
+  ],
+  "anim": [
+   "lava",
+   "marsh",
+   "oil",
+   "sea",
+   "tox",
+   "tsea",
+   "water"
+  ]
+ }
+}

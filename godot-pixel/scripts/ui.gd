@@ -683,56 +683,19 @@ func show_win(txt: String) -> void:
 func any_modal() -> bool:
 	return journal.visible or pause.visible or regions.visible or menu.visible or win.visible or (howto != null and howto.visible)
 
-# ======================================================================= miniaturas 3D
-func make_thumbs(factory: Node, parent: Node) -> void:
+# ======================================================================= miniaturas (sprites)
+func make_thumbs_2d(board: Node) -> void:
 	for t in D.TOOLS:
-		var vp := SubViewport.new()
-		vp.size = Vector2i(56, 42)
-		vp.transparent_bg = true
-		vp.own_world_3d = true
-		vp.render_target_update_mode = SubViewport.UPDATE_ONCE
-		vp.msaa_3d = Viewport.MSAA_DISABLED
-		parent.add_child(vp)
-		var cam := Camera3D.new()
-		cam.fov = 32
-		vp.add_child(cam)
-		var l := DirectionalLight3D.new(); l.rotation = Vector3(-.9, .7, 0); l.light_energy = .85
-		vp.add_child(l)
-		var e := WorldEnvironment.new(); var env := Environment.new()
-		env.background_mode = Environment.BG_CLEAR_COLOR
-		env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR; env.ambient_light_color = Color(.8, .8, .85); env.ambient_light_energy = .5
-		env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-		e.environment = env; vp.add_child(e)
-		var m: Node3D
-		var h := 1.0
-		match t.id:
-			"can":
-				m = _thumb_tile(Color("#6a5240"), Color("#5fa8d8"))
-				h = .5
-			"man":
-				m = Node3D.new()
-				var mi := MeshInstance3D.new(); mi.mesh = Geo.mangrove(3); mi.material_override = factory.mat
-				m.add_child(mi); m.scale = Vector3.ONE * 1.8; h = .7
-			"rec":
-				m = factory.drone(); m.scale = Vector3.ONE * 1.6; h = .3
-			_:
-				m = factory.make(t.id, 0)
-				m.rotation.y = .5
-				h = 1.6 if t.id in ["tur", "nub"] else .7
-		vp.add_child(m)
-		var dist := 1.9 + h * 1.3
-		cam.position = Vector3(0, h * .55 + dist * .55, dist)
-		cam.look_at(Vector3(0, h * .45, 0))
-		thumbs[t.id] = vp.get_texture()
-
-func _thumb_tile(ground: Color, water: Color) -> Node3D:
-	var n := Node3D.new()
-	var b := BoxMesh.new(); b.size = Vector3(1, .2, .4)
-	var mi := MeshInstance3D.new(); mi.mesh = b; n.add_child(mi)
-	var m := StandardMaterial3D.new(); m.albedo_color = water; m.roughness = .1; mi.material_override = m
-	for s in [-1, 1]:
-		var e := MeshInstance3D.new(); var eb := BoxMesh.new(); eb.size = Vector3(1, .3, .3); e.mesh = eb
-		e.position = Vector3(0, .05, s * .35)
-		var em := StandardMaterial3D.new(); em.albedo_color = Color("#6fae45"); e.material_override = em
-		n.add_child(e)
-	return n
+		var name: String = "b_" + t.id
+		if t.id == "man": name = "mang0"
+		elif t.id == "rec": name = "drone"
+		elif t.id == "can": name = ""
+		var at := AtlasTexture.new()
+		if name == "":
+			at.atlas = board.atlas
+			at.region = Rect2(0, board.kinds.find("water") * 16, 16, 16)
+		else:
+			var info: Dictionary = board.idx.sprites[name]
+			at.atlas = board.tex[name]
+			at.region = Rect2(0, 0, info.w, info.h)
+		thumbs[t.id] = at

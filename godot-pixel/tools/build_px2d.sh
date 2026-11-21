@@ -17,11 +17,20 @@ Cómo jugar
 
 Controles
 - Clic izquierdo: construir · arrastrar: mover el mapa
-- Clic derecho (o rueda presionada) + arrastrar: girar e inclinar la cámara
-- WASD / flechas: mover · Q/E: girar 45° · R/F: inclinar · Rueda o Z/X: zoom
+- WASD / flechas: mover · Rueda o Z/X: zoom
 - 1–9 y 0: herramientas · B: bitácora · M: sonido · G: efectos visuales
 - V: resaltar edificios (se activa solo con Reciclar) · N: ir al siguiente edificio
 - H: ocultar interfaz (para capturas) · F11: pantalla completa · Esc: pausa
+- Al empezar un mapa la nave colonia aterriza: cualquier tecla o clic salta la animación
+
+La nave colonia
+- Sus colonos construyen todo: cada edificio usa piezas de la nave, que se va desarmando.
+- Al reciclar, el dron devuelve las piezas y la nave se vuelve a armar.
+- Con los objetivos cumplidos y todo reciclado, los colonos suben y la nave despega.
+
+Nuevo (ideas del prototipo de Terra Nil)
+- Calcificador: junto al agua, convierte la tierra de alrededor en roca para más turbinas.
+- Torre monzón (fase 2): con energía provoca lluvias seguidas; todo crece más rápido.
 
 Arte adicional: paquetes gratuitos "Free Environment" y "Free Animal Pack" de itch.io (uso personal).
 
